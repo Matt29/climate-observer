@@ -24,11 +24,14 @@ Prototype validé en chat le 17/09/2026 sur les données du 17/08 au 15/09/2026.
 
 ## Ce que la page embarque
 
-- `META` : dates, grille 1°, séries globales (g60 = océan 60S-60N, gmean, sst60, frac_hot, lmean = terres)
-- `B64` : cube int8 (t, 180, 360) anomalie mer ×10, -128 = terre/absent, base64
+- `META` : dates (observées puis prévues), `nobs` (nombre de jours observés), `fc_land`, grille 1°,
+  séries à 1° (g60 = océan 60S-60N, gmean, frac_hot, lmean = terres)
+- `B64` : cube int8 (t, 180, 360) anomalie mer ×10, -128 = terre/absent, base64 ; les images ≥ `nobs` sont la prévision
 - `LB64` : idem pour la terre (CPC), -128 = océan ou pas de station
 - `COAST` : polylignes
-- `ENSO` : `hov` (dates, lons 120E-290E par 2°, rows, n34), `oni` [[saison, année, valeur]], `wk` [[date, N1+2, N3, N3.4, N4]]
+- `ENSO` : `hov` (dates, lons 120E-290E par 2°, rows, n34), `oni` [[saison, année, valeur]], `wk` [[date, N1+2, N3, N3.4, N4]], `probs` [[saison, La Niña, neutre, El Niño]]
+- `SURV` : `ice` (NSIDC nord/sud : extent, normal, rank_low, nyears, same_date{année}), `ice_maps` (calottes 0,5° uint8,
+  `now` et `ref` par année repère), `coral` (parts alert1/alert2/warning). Blocs absents = source en échec.
 
 Le JS : décodage, dilatation de 4 passes des NaN côtiers pour un rendu lisse, LUT couleur −6/+6,
 rendu orthographique pixel par pixel (inverse orthographique, ombrage, terminateur, halo, étoiles,
@@ -68,10 +71,10 @@ sparkline, onglets, graphes ENSO à axes temporels proportionnels (mélange 5 jo
    Soustraire la climatologie OISST/CPC au champ brut du modèle ferait une marche à la frontière (biais modèle).
    Vérifié le 15/09 : pas de saut (écart jour à jour médian 0,1 °C mer, ~1 °C terre, identique des deux côtés).
    IFS open data s'arrête à 240 h : la prévision est limitée aux jours communs mer et terre (9 j).
-   Les séries (`g60`, `frac_hot`, `lmean`) sont calculées à 1° sur tout le cube pour la même raison (0,25° avant : 0,80 → 0,80).
+   Les séries (`g60`, `frac_hot`, `lmean`) sont calculées à 1° sur tout le cube pour la même raison (au 15/09 la moyenne 60S-60N reste 0,80 °C).
    Chaque source optionnelle (prévisions, NSIDC, CRW, probabilités) échoue en mode dégradé : bloc omis, build maintenu.
 6. **Glace** : avant 1987 NSIDC n'a qu'une valeur tous les 2 jours, l'année repère prend le jour voisin (±1).
-   Comparer à 2020 serait trompeur (2ᵉ plus faible Arctique) : 1982 par défaut. Coraux : `NOAA_DHW` n'a pas de masque
+   2020 (2ᵉ plus faible Arctique) donne « plus de glace qu'en 2020 » : 1982 par défaut, et la carte colore glace perdue ET gagnée. Coraux : `NOAA_DHW` n'a pas de masque
    récifs, on affiche la part de l'océan tropical en alerte, pas « des récifs ».
 7. Un artifact Claude publié ne peut pas fetcher : la page doit être régénérée et hébergée (Pages/Vercel/R2).
 

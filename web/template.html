@@ -116,8 +116,9 @@ footer a{color:var(--ink)}
 <div class="local" id="surv" hidden>
   <h2>Surveillance des océans</h2>
   <h3>Glace de mer</h3>
-  <p>La banquise vue du dessus des pôles. <span class="swatch" style="background:#eef4f8"></span>glace aujourd'hui <span class="swatch" style="background:#ff8a4c"></span>glace disparue depuis le même jour de <span id="refyLab">1982</span>.</p>
+  <p>La banquise vue du dessus des pôles, comparée au même jour d'une année passée. Choisissez l'année :</p>
   <div class="regions" id="refyears" style="padding:10px 0 0"></div>
+  <p class="fine"><span class="swatch" style="background:#eef4f8;margin-left:0"></span>glace les deux années <span class="swatch" style="background:#ff8a4c"></span>glace le <span class="refy">1982</span>, disparue aujourd'hui <span class="swatch" style="background:#6fd0ff"></span>glace aujourd'hui, absente le <span class="refy">1982</span></p>
   <div class="poles">
     <div class="pole"><canvas id="iceN"></canvas><p id="iceNtxt"></p></div>
     <div class="pole"><canvas id="iceS"></canvas><p id="iceStxt"></p></div>
@@ -283,6 +284,7 @@ function drawMap(){
 // ---------- globe ----------
 const gimg={w:0,h:0,data:null};
 function drawGlobe(){
+  if(!map.clientWidth)return;   // onglet masqué : pas de rendu (évitait createImageData(0,…) à chaque image)
   const W=map.clientWidth, H=Math.round(Math.min(W,520)*1.02), dpr=W<600?1:1.5;
   map.width=Math.round(W*dpr); map.height=Math.round(H*dpr); map.style.height=H+'px';
   const w=map.width,h=map.height, R=Math.min(w,h)*0.46, cx=w/2, cy=h/2;
@@ -396,7 +398,7 @@ function updateHeader(){
 // ---------- timeline ----------
 const slider=document.getElementById('slider'), playBtn=document.getElementById('play');
 slider.max=NT-1; slider.value=TODAY;
-if(NT>NOBS) document.getElementById('fcnote').textContent=`Après le ${fdate(META.dates[TODAY]).replace(/ \d{4}$/,'')}, le curseur montre une prévision jusqu'au ${fdate(META.dates[NT-1]).replace(/ \d{4}$/,'')} (mer : Copernicus Marine, terres : ECMWF).`;
+if(NT>NOBS) document.getElementById('fcnote').textContent=`Après le ${fdate(META.dates[TODAY]).replace(/ \d{4}$/,'')}, le curseur montre une prévision jusqu'au ${fdate(META.dates[NT-1]).replace(/ \d{4}$/,'')} (mer : Copernicus Marine${META.fc_land?', terres : ECMWF':', pas de prévision sur les terres'}).`;
 let timer=null;
 function setDay(t){cur=t; slider.value=t; updateHeader(); drawMap(); if(marker)showLocal(marker.lat,marker.lon,false);}
 slider.addEventListener('input',e=>setDay(+e.target.value));
@@ -614,6 +616,7 @@ function drawIce(id,pole){
     const cz=Math.asin(r*smax)*180/Math.PI, lat=north?90-cz:-90+cz, lon=Math.atan2(dx,north?dy:-dy)*180/Math.PI;
     const a=at(now,lat,lon), b=at(ref,lat,lon); let col;
     if(a===255) col=[44,58,70];
+    else if(a>=15&&b<15) col=[111,208,255];   // glace gagnée par rapport à l'année repère
     else if(a>=15){ const k=0.55+0.45*a/100; col=[11+(238-11)*k,34+(244-34)*k,56+(248-56)*k]; }
     else if(b>=15&&b!==255) col=[255,138,76];
     else col=[11,34,56];
@@ -641,11 +644,11 @@ function setupSurv(){
 }
 function drawSurv(){
   if(typeof SURV==='undefined'||!SURV.ice||!SURV.ice_maps||document.getElementById('surv').hidden)return;
-  document.getElementById('refyLab').textContent=refYear;
+  document.querySelectorAll('.refy').forEach(e=>e.textContent=fdate(SURV.ice.north.date).replace(/ \d{4}$/,' '+refYear));
   for(const [id,pole,name] of [['iceN','north','Arctique'],['iceS','south','Antarctique']]){
     const I=SURV.ice[pole], r=I.same_date[refYear]; drawIce(id,pole);
     document.getElementById(id+'txt').innerHTML=`<b>${mkm(I.extent)}</b> au ${fdate(I.date).replace(/ \d{4}$/,'')}, soit ${pctS(I.extent/I.normal-1)} par rapport à la normale. `+
-      (r?`Il reste <b>${Math.round(I.extent/r*100)} %</b> de la surface du même jour en ${refYear} (${mkm(r)}). `:'')+
+      (r?`C'est <b>${Math.abs(Math.round((I.extent/r-1)*100))} % de ${I.extent<r?'moins':'plus'}</b> que le même jour en ${refYear} (${mkm(r)}). `:'')+
       `${I.rank_low===1?'Plus faible':I.rank_low+'<sup>e</sup> plus faible'} étendue sur ${I.nyears} ans pour cette date.`;
   }
 }

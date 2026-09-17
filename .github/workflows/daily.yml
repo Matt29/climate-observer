@@ -20,7 +20,7 @@ jobs:
         env:
           COPERNICUSMARINE_SERVICE_USERNAME: ${{ secrets.COPERNICUSMARINE_SERVICE_USERNAME }}
           COPERNICUSMARINE_SERVICE_PASSWORD: ${{ secrets.COPERNICUSMARINE_SERVICE_PASSWORD }}
-      - run: find cache/ecmwf cache/glo12 -type f -mtime +2 -delete   # prévisions périmées, ~25 Mo/jour sinon
+      - run: find cache/ecmwf cache/glo12 cache/oisst_ref -type f -mtime +2 -delete 2>/dev/null || true   # périmés ; dossiers absents si une source a échoué
       - run: python build_page.py
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
