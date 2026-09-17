@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fièvre océan, l'écart à la normale, jour après jour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c1a27; --bg2:#122536; --ink:#ecf2f6; --mute:#8ea4b6; --line:#213b50;
+  --land:#1c2a36; --hot:#ff6a3d; --cold:#6fb3ff; --accent:#ffd166;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="light"]){ } }
+:root[data-theme="dark"]{}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+body{max-width:1100px;margin:0 auto;padding:0 0 60px}
+header{padding:22px 18px 6px}
+.kicker{color:var(--mute);font-size:15px;font-weight:500;letter-spacing:.01em}
+h1{margin:6px 0 0;font-size:clamp(34px,7.5vw,68px);line-height:.98;font-weight:700;font-variation-settings:"opsz" 96;letter-spacing:-.02em}
+h1 .num{font-weight:800;color:var(--hot);white-space:nowrap}
+h1 .num.neg{color:var(--cold)}
+.sub{margin:12px 0 0;color:var(--mute);font-size:15px;max-width:60ch;line-height:1.45}
+.stats{display:flex;gap:22px;padding:14px 18px 6px;flex-wrap:wrap}
+.stat b{display:block;font-size:24px;font-weight:700;letter-spacing:-.01em}
+.stat span{color:var(--mute);font-size:13px}
+.mapwrap{position:relative;margin:10px 0 0;background:#060d15;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+canvas#map{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none;user-select:none}
+.regions{display:flex;gap:6px;padding:10px 18px 0;flex-wrap:wrap}
+.regions button,.ctrl button{font:inherit;font-size:14px;font-weight:600;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer}
+.regions button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.regions button:focus-visible,.ctrl button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.legend{display:flex;align-items:center;gap:10px;padding:10px 18px 0;color:var(--mute);font-size:12px}
+.legend .bar{flex:1;height:10px;border-radius:5px;background:linear-gradient(90deg,#0a3d78,#4a8fd9,#ecebe4,#f58a3e,#c81e1e,#5c0a0a)}
+.ctrl{display:flex;align-items:center;gap:12px;padding:14px 18px 0}
+.ctrl button{width:44px;height:44px;padding:0;border-radius:50%;font-size:18px;display:grid;place-items:center;flex:none}
+.ctrl input[type=range]{flex:1;accent-color:var(--hot);height:44px}
+.ctrl .date{min-width:9.5ch;font-weight:600;font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
+.local{margin:26px 18px 0;padding:18px 18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--bg2)}
+.local h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.local p{margin:8px 0 0;color:var(--mute);font-size:15px;line-height:1.45}
+.local .big{font-size:clamp(44px,12vw,84px);font-weight:800;line-height:1;margin:14px 0 4px;letter-spacing:-.03em;color:var(--hot)}
+.local .big.neg{color:var(--cold)}
+.local .big small{font-size:.35em;font-weight:600;color:var(--mute);letter-spacing:0;margin-left:6px}
+.local .where{color:var(--ink);font-weight:600}
+.local .tag{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;background:#2b1a16;color:#ffb39f}
+.local .tag.cool{background:#12283a;color:#9ccbff}.local .tag.ok{background:#1a2c2a;color:#9fe0c8}
+.geo{margin-top:12px;font:inherit;font-size:15px;font-weight:600;background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:11px 16px;cursor:pointer}
+.geo:disabled{opacity:.5}
+canvas#spark{display:block;width:100%;height:90px;margin-top:14px}
+.sparklab{display:flex;justify-content:space-between;color:var(--mute);font-size:12px;margin-top:4px}
+nav.tabs{display:flex;gap:6px;padding:16px 18px 0}
+nav.tabs button{font:inherit;font-size:15px;font-weight:700;color:var(--mute);background:transparent;border:0;border-bottom:2px solid transparent;padding:8px 2px;margin-right:12px;cursor:pointer}
+nav.tabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--hot)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+canvas.ech{display:block;width:100%;margin-top:14px}
+footer{padding:28px 18px 0;color:var(--mute);font-size:13px;line-height:1.5;max-width:70ch}
+footer a{color:var(--ink)}
+.next{margin:22px 18px 0;padding:14px 16px;border-left:3px solid var(--accent);color:var(--mute);font-size:14px;line-height:1.5}
+.next b{color:var(--ink)}
+@media (prefers-reduced-motion: reduce){ .local{transition:none} }
+</style>
+</head>
+<body>
+<nav class="tabs" aria-label="Sections"><button data-tab="globe" aria-pressed="true">Le globe</button><button data-tab="enso" aria-pressed="false">El Niño en direct</button></nav>
+<section id="tab-globe">
+<header>
+  <div class="kicker">Océans et continents, écart à la normale</div>
+  <h1 id="headline">Aujourd'hui, l'océan est à <span class="num" id="gnum">+0,00 °C</span> au-dessus de sa normale.</h1>
+  <p class="sub" id="sublead">Moyenne des océans entre 60°S et 60°N, et <span id="lmeanTxt">les terres sont à +0,00 °C</span>. Chaque pixel compare la température du jour à celle attendue ce jour-là. Faites tourner le globe, touchez chez vous.</p>
+</header>
+<div class="stats">
+  <div class="stat"><b id="fracHot">0 %</b><span>de l'océan à plus de +1 °C</span></div>
+  <div class="stat"><b id="landMean">+0,0 °C</b><span>écart moyen sur les continents</span></div>
+  <div class="stat"><b id="trend30">+0,00</b><span>évolution sur 30 jours</span></div>
+</div>
+<div class="regions" id="regions"></div>
+<div class="mapwrap"><canvas id="map"></canvas></div>
+<div class="legend"><span>−5 °C</span><div class="bar"></div><span>+6 °C</span></div>
+<div class="ctrl">
+  <button id="play" aria-label="Lancer l'animation">▶</button>
+  <button id="spin">⟳</button>
+  <input type="range" id="slider" min="0" max="29" value="29" aria-label="Jour affiché">
+  <div class="date" id="dateLab"></div>
+</div>
+
+<section class="local" id="local">
+  <h2 id="ltitle">Et chez vous ?</h2>
+  <p id="lhelp">Touchez un point sur le globe, mer ou terre, ou utilisez votre position.</p>
+  <div id="lresult" hidden>
+    <div class="big" id="lbig">+0,0<small>°C</small></div>
+    <p><span class="where" id="lwhere"></span> <span id="ltext"></span></p>
+    <span class="tag" id="ltag"></span>
+    <canvas id="spark"></canvas>
+    <div class="sparklab"><span id="sd0"></span><span>écart quotidien, 30 jours</span><span id="sd1"></span></div>
+  </div>
+  <button class="geo" id="geo">Utiliser ma position</button>
+</section>
+
+<div class="next">Ce prototype tourne sur une photo des 30 derniers jours d'observations. <b>La version complète</b> se rafraîchit chaque matin et ajoute une prévision à 10 jours, à la même adresse.</div>
+
+</section>
+<section id="tab-enso" hidden>
+<header>
+  <div class="kicker">Pacifique équatorial, la zone qui fait la météo du monde</div>
+  <h1 id="ehead">Le thermomètre d'El Niño est à <span class="num" id="enum">+0,0 °C</span> aujourd'hui.</h1>
+  <p class="sub" id="esub"></p>
+</header>
+<div class="next"><b>El Niño, c'est quoi ?</b> Tous les 2 à 7 ans, l'eau du Pacifique équatorial se réchauffe anormalement sur des milliers de kilomètres. Ce réchauffement bouscule la météo de la planète : sécheresses en Australie et en Indonésie, pluies diluviennes au Pérou, et souvent une année record de chaleur mondiale dans la foulée. <b>La Niña</b> est l'inverse, un refroidissement.<br><br><b>Le thermomètre.</b> Pour suivre El Niño, la NOAA mesure l'écart à la normale de la température de l'eau dans un rectangle au milieu du Pacifique, grand comme onze fois la France, appelé <b>Niño 3.4</b>. Tous les chiffres « °C » de cette page sont des écarts à la moyenne 1991-2020 : +1 °C veut dire « 1 degré plus chaud que d'habitude à cette date ».</div>
+<div class="stats">
+  <div class="stat"><b id="e4">+0,0 °C</b><span>Pacifique ouest</span></div>
+  <div class="stat"><b id="e3">+0,0 °C</b><span>Pacifique est</span></div>
+  <div class="stat"><b id="e12">+0,0 °C</b><span>Au large du Pérou</span></div>
+  <div class="stat"><b id="eoni">+0,0 °C</b><span id="eonilab">Moyenne officielle sur 3 mois</span></div>
+</div>
+<div class="local">
+  <h2>Le thermomètre d'El Niño sur un an</h2>
+  <p>Écart à la normale de l'eau dans le rectangle Niño 3.4, mesuré par satellite. Au-dessus de la ligne rouge (+0,5 °C), on parle d'El Niño ; sous la ligne bleue (−0,5 °C), de La Niña. Entre les deux, le Pacifique est neutre.</p>
+  <canvas id="e34" class="ech"></canvas>
+</div>
+<div class="local">
+  <h2>La chaleur qui traverse le Pacifique</h2>
+  <p>Imaginez une bande d'océan le long de l'équateur, de l'Indonésie (à gauche) jusqu'au Pérou (à droite), près de 19 000 km. Chaque ligne horizontale est une photo de cette bande. On empile les photos : il y a un an en haut, aujourd'hui en bas. <b>Quand le rouge s'étale vers la droite en descendant, c'est El Niño qui s'installe.</b> Le cadre blanc est le rectangle du thermomètre.</p>
+  <canvas id="ehov" class="ech"></canvas>
+  <div class="legend" style="padding:8px 0 0"><span>eau plus froide</span><div class="bar"></div><span>plus chaude que la normale</span></div>
+</div>
+<div class="local">
+  <h2>Depuis 1950</h2>
+  <p>La moyenne officielle du thermomètre sur trois mois glissants (indice « ONI » de la NOAA). Chaque barre est une saison : rouge pour El Niño, bleu pour La Niña. Un épisode n'est officiel qu'après cinq saisons d'affilée au-delà du seuil. Les grands épisodes sont annotés.</p>
+  <canvas id="eoni_c" class="ech"></canvas>
+</div>
+</section>
+<footer>Sources : mer, NOAA OISST v2.1 (0,25°, anomalie recalculée sur la base 1991-2020) ; terre, NOAA CPC Global Daily Temperature (0,5°, moyenne de Tmax et Tmin, base 1991-2020). Agrégées à 1° pour l'affichage. Trait de côte Natural Earth. Indices ENSO : NOAA CPC (hebdo et ONI). Derniers jours en statut préliminaire. Zones grises : pas de mesure (Antarctique, Groenland, trous de stations). Un projet OceanData Consulting.</footer>
+<script>
+/*__DATA__*/
+
+// ---------- decode ----------
+const NT=META.dates.length, NLAT=META.nlat, NLON=META.nlon;
+const raw=Uint8Array.from(atob(B64),c=>c.charCodeAt(0));
+const cube=new Int8Array(raw.buffer); // [t][lat][lon], lat ascending from -89.5
+const LAND=-128;
+const lraw=Uint8Array.from(atob(LB64),c=>c.charCodeAt(0)); const lcube=new Int8Array(lraw.buffer);
+function lv(t,i,j){return lcube[(t*NLAT+i)*NLON+j];}
+function v(t,i,j){return cube[(t*NLAT+i)*NLON+j];}
+
+// ocean mask + filled version (dilated) for smooth rendering
+const isLand=new Uint8Array(NLAT*NLON);
+for(let i=0;i<NLAT;i++)for(let j=0;j<NLON;j++)isLand[i*NLON+j]=v(NT-1,i,j)===LAND?1:0;
+
+function filled(t){
+  const out=new Float32Array(NLAT*NLON);
+  for(let k=0;k<NLAT*NLON;k++)out[k]=isLand[k]?NaN:cube[t*NLAT*NLON+k]/10;
+  // 4 dilation passes
+  for(let p=0;p<4;p++){
+    const src=Float32Array.from(out);
+    for(let i=0;i<NLAT;i++)for(let j=0;j<NLON;j++){
+      const k=i*NLON+j; if(!isNaN(src[k]))continue;
+      let s=0,n=0;
+      for(let di=-1;di<=1;di++)for(let dj=-1;dj<=1;dj++){
+        const ii=i+di; if(ii<0||ii>=NLAT)continue;
+        const jj=(j+dj+NLON)%NLON; const q=src[ii*NLON+jj];
+        if(!isNaN(q)){s+=q;n++;}
+      }
+      if(n)out[k]=s/n;
+    }
+  }
+  return out;
+}
+
+// ---------- colour ----------
+const STOPS=[[-5,[10,61,120]],[-2,[74,143,217]],[0,[236,235,228]],[2,[245,138,62]],[4,[200,30,30]],[6,[92,10,10]]];
+function color(a){
+  if(a<=STOPS[0][0])return STOPS[0][1]; if(a>=STOPS[STOPS.length-1][0])return STOPS[STOPS.length-1][1];
+  for(let s=0;s<STOPS.length-1;s++){const[a0,c0]=STOPS[s],[a1,c1]=STOPS[s+1];
+    if(a>=a0&&a<=a1){const f=(a-a0)/(a1-a0);return[c0[0]+(c1[0]-c0[0])*f,c0[1]+(c1[1]-c0[1])*f,c0[2]+(c1[2]-c0[2])*f];}}
+  return[0,0,0];
+}
+const framesF=new Array(NT); function frameF(t){return framesF[t]||(framesF[t]=filled(t));}
+const LUT=new Uint8ClampedArray(256*3); for(let k=0;k<256;k++){const c=color(-6+12*k/255);LUT[k*3]=c[0];LUT[k*3+1]=c[1];LUT[k*3+2]=c[2];}
+function lutIdx(a){return Math.max(0,Math.min(255,Math.round((a+6)/12*255)));}
+// precompute frames as 360x180 ImageData-ready buffers (lazy)
+const frames=new Array(NT);
+function frame(t){
+  if(frames[t])return frames[t];
+  const f=frameF(t), img=new Uint8ClampedArray(NLAT*NLON*4);
+  for(let i=0;i<NLAT;i++)for(let j=0;j<NLON;j++){
+    const k=i*NLON+j, row=NLAT-1-i; // flip to north-up
+    let c; if(isLand[k]){const x=lv(t,i,j); c=x===LAND?[46,54,62]:color(x/10);} else c=color(f[k]); const o=(row*NLON+j)*4;
+    img[o]=c[0];img[o+1]=c[1];img[o+2]=c[2];img[o+3]=255;
+  }
+  frames[t]=img; return img;
+}
+// land mask overlay (north-up)
+const landImg=new Uint8ClampedArray(NLAT*NLON*4);
+for(let i=0;i<NLAT;i++)for(let j=0;j<NLON;j++){const row=NLAT-1-i,o=(row*NLON+j)*4;
+  if(isLand[i*NLON+j]){landImg[o]=0;landImg[o+1]=0;landImg[o+2]=0;landImg[o+3]=0;}}
+
+// ---------- map rendering ----------
+const REGIONS=[
+  {n:"Globe",globe:true},
+  {n:"Monde",b:[-180,180,-80,85]},
+  {n:"Atlantique NE",b:[-35,20,28,68]},
+  {n:"Méditerranée",b:[-7,37,29,47]},
+  {n:"Antilles",b:[-92,-52,6,30]},
+  {n:"Pacifique",b:[100,290,-40,60]},
+];
+let region=REGIONS[0], cur=NT-1, marker=null;
+const globe={lon:-20,lat:25,spin:!matchMedia('(prefers-reduced-motion: reduce)').matches,dragging:false};
+const map=document.getElementById('map'), ctx=map.getContext('2d');
+const off=document.createElement('canvas'); off.width=NLON; off.height=NLAT; const octx=off.getContext('2d');
+const coastImg=new Uint8ClampedArray(NLAT*NLON*4);
+const isCoast=new Uint8Array(NLAT*NLON);
+for(let i=0;i<NLAT;i++)for(let j=0;j<NLON;j++){const k=i*NLON+j,L=isLand[k];
+  const nb=[[i-1,j],[i+1,j],[i,(j+1)%NLON],[i,(j-1+NLON)%NLON]].some(([a,b])=>a>=0&&a<NLAT&&isLand[a*NLON+b]!==L);
+  if(nb&&L){isCoast[k]=1;const row=NLAT-1-i,o=(row*NLON+j)*4;coastImg[o]=6;coastImg[o+1]=12;coastImg[o+2]=20;coastImg[o+3]=150;}}
+const offC=document.createElement('canvas'); offC.width=NLON; offC.height=NLAT; offC.getContext('2d').putImageData(new ImageData(coastImg,NLON,NLAT),0,0);
+const offL=document.createElement('canvas'); offL.width=NLON; offL.height=NLAT; offL.getContext('2d').putImageData(new ImageData(landImg,NLON,NLAT),0,0);
+
+function lon2x(lon,b){return (lon-b[0])/(b[1]-b[0]);}
+function lat2y(lat,b){return (b[3]-lat)/(b[3]-b[2]);}
+
+function drawMap(){
+  if(region.globe)return drawGlobe();
+  const b=region.b, W=map.clientWidth, aspect=(b[1]-b[0])/((b[3]-b[2])*1.35);
+  const H=Math.round(W/aspect), dpr=Math.min(window.devicePixelRatio||1,2);
+  map.width=W*dpr; map.height=H*dpr; map.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  octx.putImageData(new ImageData(frame(cur),NLON,NLAT),0,0);
+  // source rect in grid pixels (north-up: row 0 = lat 89.5)
+  const sx=(b[0]+180), sw=(b[1]-b[0]), sy=(90-b[3]), sh=(b[3]-b[2]);
+  ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+  const drawSrc=(src)=>{
+    if(b[1]<=180){ctx.drawImage(src,sx,sy,sw,sh,0,0,W,H);}
+    else{ // wrap across dateline
+      const w1=(180-b[0]), w2=(b[1]-180), f=w1/sw;
+      ctx.drawImage(src,sx,sy,w1,sh,0,0,W*f,H);
+      ctx.drawImage(src,0,sy,w2,sh,W*f,0,W*(1-f),H);
+    }
+  };
+  drawSrc(off);
+  drawCoastFlat(b,W,H);
+  // graticule
+  ctx.strokeStyle='rgba(236,242,246,.12)'; ctx.lineWidth=1;
+  for(let lat=-60;lat<=60;lat+=30){const y=lat2y(lat,b)*H; if(y<0||y>H)continue; ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  if(marker){
+    let lon=marker.lon; if(b[1]>180&&lon<0)lon+=360;
+    const x=lon2x(lon,b)*W, y=lat2y(marker.lat,b)*H;
+    ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  }
+}
+
+
+// ---------- globe ----------
+const gimg={w:0,h:0,data:null};
+function drawGlobe(){
+  const W=map.clientWidth, H=Math.round(Math.min(W,520)*1.02), dpr=W<600?1:1.5;
+  map.width=Math.round(W*dpr); map.height=Math.round(H*dpr); map.style.height=H+'px';
+  const w=map.width,h=map.height, R=Math.min(w,h)*0.46, cx=w/2, cy=h/2;
+  if(gimg.w!==w||gimg.h!==h){gimg.w=w;gimg.h=h;gimg.data=ctx.createImageData(w,h);}
+  const d=gimg.data.data, f=frameF(cur);
+  const p0=globe.lat*Math.PI/180, l0=globe.lon*Math.PI/180, sp=Math.sin(p0), cp=Math.cos(p0);
+  const bg=[6,13,21];
+  const doy=Math.round((Date.parse(META.dates[cur])-Date.parse(META.dates[cur].slice(0,4)+'-01-01'))/864e5)+1;
+  const decl=-23.44*Math.PI/180*Math.cos(2*Math.PI*(doy+10)/365), sunLon=(-globe.lon*0.3+40)*Math.PI/180;
+  const sx=Math.cos(decl)*Math.cos(sunLon), sy=Math.cos(decl)*Math.sin(sunLon), sz=Math.sin(decl);
+  if(!gimg.stars){gimg.stars=[];let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};for(let n=0;n<160;n++)gimg.stars.push([rnd(),rnd(),rnd()]);}
+  for(let py=0;py<h;py++){
+    const y=(cy-py)/R;
+    for(let px=0;px<w;px++){
+      const o=(py*w+px)*4, x=(px-cx)/R, r2=x*x+y*y;
+      if(r2>1.0){
+        const g=r2<1.12?Math.pow(Math.max(0,1-(Math.sqrt(r2)-1)/0.06),1.6)*0.8:0;
+        d[o]=bg[0]+g*70;d[o+1]=bg[1]+g*120;d[o+2]=bg[2]+g*170;d[o+3]=255;continue;}
+      const z=Math.sqrt(1-r2);
+      const lat=Math.asin(z*sp+y*cp);
+      const lon=l0+Math.atan2(x,z*cp-y*sp);
+      const latd=lat*180/Math.PI, lond=((lon*180/Math.PI+180)%360+360)%360-180;
+      const gi=latd-META.lat0, gj=lond-META.lon0;
+      const i0=Math.max(0,Math.min(NLAT-1,Math.floor(gi))), j0=((Math.floor(gj))%NLON+NLON)%NLON;
+      const iN=Math.round(gi)<0?0:Math.min(NLAT-1,Math.round(gi)), jN=((Math.round(gj))%NLON+NLON)%NLON;
+      const cl=Math.cos(lat), vx=cl*Math.cos(lon), vy=cl*Math.sin(lon), vz=Math.sin(lat);
+      const sun=vx*sx+vy*sy+vz*sz;
+      const day=Math.max(0,Math.min(1,(sun+0.12)/0.3));
+      const shade=(0.55+0.45*Math.pow(z,0.7))*(0.42+0.58*day);
+      const kc=iN*NLON+jN; let c0,c1,c2;
+      if(isLand[kc]){
+        const i1=Math.min(NLAT-1,i0+1), j1=(j0+1)%NLON, fi=Math.max(0,Math.min(1,gi-i0)), fj=gj-Math.floor(gj), base=cur*NLAT*NLON;
+        let sa=0,sw=0; const cells=[[i0*NLON+j0,(1-fi)*(1-fj)],[i0*NLON+j1,(1-fi)*fj],[i1*NLON+j0,fi*(1-fj)],[i1*NLON+j1,fi*fj]];
+        for(const [kk,ww] of cells){ if(isLand[kk]){const x=lcube[base+kk]; if(x!==LAND){sa+=x*ww;sw+=ww;}} }
+        const xc=lcube[base+kc];
+        if(xc===LAND&&sw<0.3){c0=52;c1=58;c2=64;} else {const k=lutIdx((sw>0?sa/sw:xc)/10)*3;c0=LUT[k];c1=LUT[k+1];c2=LUT[k+2];}
+      } else {
+        const i1=Math.min(NLAT-1,i0+1), j1=(j0+1)%NLON, fi=Math.max(0,Math.min(1,gi-i0)), fj=gj-Math.floor(gj);
+        const a=f[i0*NLON+j0]*(1-fi)*(1-fj)+f[i0*NLON+j1]*(1-fi)*fj+f[i1*NLON+j0]*fi*(1-fj)+f[i1*NLON+j1]*fi*fj;
+        const k=lutIdx(a)*3;c0=LUT[k];c1=LUT[k+1];c2=LUT[k+2];
+      }
+      const rim=Math.pow(1-z,6)*day*40;
+      d[o]=c0*shade+rim*0.6;d[o+1]=c1*shade+rim*0.8;d[o+2]=c2*shade+rim;d[o+3]=255;
+    }
+  }
+  ctx.setTransform(1,0,0,1,0,0); ctx.putImageData(gimg.data,0,0);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  for(const [ax,ay,st] of gimg.stars){const x=ax*W,y=ay*H; if(Math.hypot(x-cx/dpr,y-cy/dpr)<R/dpr*1.08)continue;
+    ctx.fillStyle=`rgba(220,232,245,${0.25+st*0.6})`;ctx.fillRect(x,y,st>0.85?1.6:1,st>0.85?1.6:1);}
+  drawCoastGlobe(cx/dpr,cy/dpr,R/dpr,p0,l0);
+  if(marker){const m=fwd(marker.lat,marker.lon,p0,l0); if(m.z>0){const x=cx/dpr+m.x*R/dpr, y=cy/dpr-m.y*R/dpr;
+    ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();}}
+}
+function fwd(latd,lond,p0,l0){const p=latd*Math.PI/180,l=lond*Math.PI/180,dl=l-l0;
+  return {x:Math.cos(p)*Math.sin(dl), y:Math.cos(p0)*Math.sin(p)-Math.sin(p0)*Math.cos(p)*Math.cos(dl), z:Math.sin(p0)*Math.sin(p)+Math.cos(p0)*Math.cos(p)*Math.cos(dl)};}
+function globeInverse(px,py){
+  const r=map.getBoundingClientRect(), W=r.width, H=r.height, R=Math.min(W,H)*0.46, x=(px-r.left-W/2)/R, y=(H/2-(py-r.top))/R, r2=x*x+y*y;
+  if(r2>1)return null; const z=Math.sqrt(1-r2), p0=globe.lat*Math.PI/180, l0=globe.lon*Math.PI/180;
+  const lat=Math.asin(z*Math.sin(p0)+y*Math.cos(p0)), lon=l0+Math.atan2(x,z*Math.cos(p0)-y*Math.sin(p0));
+  return {lat:lat*180/Math.PI, lon:((lon*180/Math.PI+180)%360+360)%360-180};
+}
+let lastT=0;
+function tick(ts){
+  if(region.globe&&globe.spin&&!globe.dragging&&document.visibilityState==='visible'){
+    const dt=Math.min(50,ts-lastT); globe.lon=((globe.lon+dt*0.011+180)%360)-180; drawGlobe();
+  }
+  lastT=ts; requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+// drag to rotate
+let pd=null;
+map.addEventListener('pointerdown',e=>{if(!region.globe)return;pd={x:e.clientX,y:e.clientY,lon:globe.lon,lat:globe.lat,moved:false};map.setPointerCapture(e.pointerId);});
+map.addEventListener('pointermove',e=>{if(!pd)return;const dx=e.clientX-pd.x,dy=e.clientY-pd.y;
+  if(Math.abs(dx)+Math.abs(dy)>4){pd.moved=true;globe.dragging=true;}
+  if(pd.moved){const k=0.35;globe.lon=((pd.lon+dx*k+180)%360)-180;globe.lat=Math.max(-80,Math.min(80,pd.lat+dy*k));drawGlobe();}});
+map.addEventListener('pointerup',e=>{if(!pd)return;globe.dragging=false;pd=null;});
+map.addEventListener('pointercancel',()=>{globe.dragging=false;pd=null;});
+
+// ---------- coastline ----------
+function drawCoastFlat(b,W,H){
+  ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=1; ctx.lineJoin='round'; ctx.beginPath();
+  const wrap=b[1]>180;
+  for(const line of COAST){ let pen=false, px=0;
+    for(const [lo,la] of line){ let lon=lo; if(wrap&&lon<0)lon+=360; const x=lon2x(lon,b)*W, y=lat2y(la,b)*H;
+      if(!pen||Math.abs(x-px)>W*0.5){ctx.moveTo(x,y);pen=true;} else ctx.lineTo(x,y); px=x; } }
+  ctx.stroke();
+}
+function drawCoastGlobe(cx,cy,R,p0,l0){
+  ctx.strokeStyle='rgba(255,255,255,.7)'; ctx.lineWidth=1; ctx.lineJoin='round'; ctx.beginPath();
+  for(const line of COAST){ let pen=false;
+    for(const [lo,la] of line){ const m=fwd(la,lo,p0,l0); if(m.z<0.01){pen=false;continue;}
+      const x=cx+m.x*R, y=cy-m.y*R; if(pen)ctx.lineTo(x,y); else {ctx.moveTo(x,y);pen=true;} } }
+  ctx.stroke();
+}
+// ---------- header stats ----------
+const fmt=(x,d=2)=>(x>=0?'+':'−')+Math.abs(x).toFixed(d).replace('.',',');
+const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const fdate=s=>{const[y,m,d]=s.split('-');return `${+d} ${MONTHS[+m-1]} ${y}`;};
+function updateHeader(){
+  const g=META.g60[cur], el=document.getElementById('gnum');
+  el.textContent=fmt(g)+' °C'; el.classList.toggle('neg',g<0);
+  document.getElementById('headline').firstChild.textContent=(cur===NT-1?"Aujourd'hui":"Le "+fdate(META.dates[cur]))+", l'océan est à ";
+  document.getElementById('fracHot').textContent=Math.round(META.frac_hot[cur]*100)+' %';
+  const lm=META.lmean[cur]; document.getElementById('landMean').textContent=lm==null?'n/d':fmt(lm,1)+' °C';
+  document.getElementById('lmeanTxt').textContent=lm==null?'les terres (pas de mesure ce jour)':'les terres sont à '+fmt(lm,1)+' °C';
+  document.getElementById('trend30').textContent=fmt(META.g60[cur]-META.g60[0])+' °C';
+  document.getElementById('dateLab').textContent=fdate(META.dates[cur]).replace(' 2026','');
+}
+
+// ---------- timeline ----------
+const slider=document.getElementById('slider'), playBtn=document.getElementById('play');
+slider.max=NT-1; slider.value=NT-1;
+let timer=null;
+function setDay(t){cur=t; slider.value=t; updateHeader(); drawMap(); if(marker)showLocal(marker.lat,marker.lon,false);}
+slider.addEventListener('input',e=>setDay(+e.target.value));
+function play(){ if(timer){clearInterval(timer);timer=null;playBtn.textContent='▶';playBtn.setAttribute('aria-label','Lancer l\'animation');return;}
+  playBtn.textContent='❚❚'; playBtn.setAttribute('aria-label','Mettre en pause');
+  if(cur===NT-1)cur=-1;
+  timer=setInterval(()=>{ if(cur>=NT-1){clearInterval(timer);timer=null;playBtn.textContent='▶';return;} setDay(cur+1); }, 220);
+}
+playBtn.addEventListener('click',play);
+const spinBtn=document.getElementById('spin'); const spinLab=()=>{spinBtn.textContent=globe.spin?'⟳':'⊙';spinBtn.setAttribute('aria-label',globe.spin?'Arrêter la rotation':'Relancer la rotation');};
+spinBtn.addEventListener('click',()=>{globe.spin=!globe.spin;spinLab();}); spinLab();
+
+// ---------- regions ----------
+const rb=document.getElementById('regions');
+REGIONS.forEach((r,k)=>{const b=document.createElement('button');b.textContent=r.n;b.setAttribute('aria-pressed',k===0);
+  b.onclick=()=>{region=r;[...rb.children].forEach((c,i)=>c.setAttribute('aria-pressed',i===k));drawMap();};rb.appendChild(b);});
+
+// ---------- local lookup ----------
+function cellVal(t,i,j){ const k=i*NLON+j; if(isLand[k]){const x=lv(t,i,j); return x===LAND?NaN:x/10;} return v(t,i,j)/10; }
+function nearestData(lat,lon){
+  let i0=Math.round(lat-META.lat0), j0=Math.round(((lon-META.lon0)%360+360)%360); i0=Math.max(0,Math.min(NLAT-1,i0));
+  for(let r=0;r<=3;r++){ let best=null,bd=1e9;
+    for(let di=-r;di<=r;di++)for(let dj=-r;dj<=r;dj++){ const i=i0+di,j=((j0+dj)%NLON+NLON)%NLON; if(i<0||i>=NLAT)continue;
+      if(isNaN(cellVal(NT-1,i,j)))continue; const d=di*di+dj*dj; if(d<bd){bd=d;best=[i,j];} }
+    if(best)return {i:best[0],j:best[1],snapped:bd>0,land:!!isLand[best[0]*NLON+best[1]]}; }
+  return null;
+}
+function nearestOcean(lat,lon){
+  let i0=Math.round(lat-META.lat0), j0=Math.round(((lon-META.lon0)%360+360)%360);
+  i0=Math.max(0,Math.min(NLAT-1,i0));
+  for(let r=0;r<=3;r++){
+    let best=null,bd=1e9;
+    for(let di=-r;di<=r;di++)for(let dj=-r;dj<=r;dj++){
+      const i=i0+di,j=((j0+dj)%NLON+NLON)%NLON; if(i<0||i>=NLAT)continue;
+      if(isLand[i*NLON+j])continue; const d=di*di+dj*dj; if(d<bd){bd=d;best=[i,j];}
+    }
+    if(best)return {i:best[0],j:best[1],dist:Math.sqrt(bd),snapped:bd>0};
+  }
+  return null;
+}
+const spark=document.getElementById('spark');
+function showLocal(lat,lon,scroll=true){
+  const p=nearestData(lat,lon);
+  const res=document.getElementById('lresult'), help=document.getElementById('lhelp');
+  if(!p){res.hidden=true;help.textContent="Pas de mesure ici (zone grise). Essayez un point voisin.";return;}
+  marker={lat,lon}; drawMap();
+  const series=[]; for(let t=0;t<NT;t++)series.push(cellVal(t,p.i,p.j)); const a=series[cur];
+  if(isNaN(a)){res.hidden=true;help.textContent="Pas de mesure ce jour-là à cet endroit.";return;}
+  res.hidden=false;
+  help.textContent=(p.land?"Sur terre":"En mer")+(p.snapped?", point mesuré le plus proche de l'endroit choisi.":".");
+  const big=document.getElementById('lbig'); big.innerHTML=fmt(a,1)+'<small>°C</small>'; big.classList.toggle('neg',a<0);
+  const plat=Math.abs(lat).toFixed(1).replace('.',',')+'°'+(lat>=0?'N':'S'), plon=Math.abs(lon).toFixed(1).replace('.',',')+'°'+(lon>=0?'E':'O');
+  document.getElementById('lwhere').textContent=`${plat} ${plon} :`;
+  const dl=(cur===NT-1?"aujourd'hui":"le "+fdate(META.dates[cur]));
+  document.getElementById('ltext').textContent=a>=0
+    ?`${p.land?"il fait":"l'eau est"} ${Math.abs(a).toFixed(1).replace('.',',')} °C plus ${p.land?"chaud":"chaude"} que la normale d'un ${fdate(META.dates[cur]).replace(' 2026','')}${dl==="aujourd'hui"?" (aujourd'hui)":""}.`
+    :`${p.land?"il fait":"l'eau est"} ${Math.abs(a).toFixed(1).replace('.',',')} °C plus ${p.land?"froid":"froide"} que la normale d'un ${fdate(META.dates[cur]).replace(' 2026','')}${dl==="aujourd'hui"?" (aujourd'hui)":""}.`;
+  const tag=document.getElementById('ltag'); tag.className='tag';
+  if(a<-0.5){tag.textContent='Plus froid que d\'habitude';tag.classList.add('cool');}
+  else if(a<0.5){tag.textContent='Dans la normale';tag.classList.add('ok');}
+  else if(a<1.5)tag.textContent='Plus chaud que la normale';
+  else if(a<3)tag.textContent='Nettement plus chaud';
+  else tag.textContent='Anomalie extrême';
+  document.getElementById('sd0').textContent=fdate(META.dates[0]).replace(' 2026','');
+  document.getElementById('sd1').textContent=fdate(META.dates[NT-1]).replace(' 2026','');
+  drawSpark(series);
+  if(scroll)document.getElementById('local').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
+}
+function drawSpark(s){
+  const c=spark,dpr=Math.min(window.devicePixelRatio||1,2),W=c.clientWidth,H=90; c.width=W*dpr;c.height=H*dpr; const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,W,H);
+  const sv=s.filter(x=>!isNaN(x)); const mn=Math.min(0,...sv)-0.3, mx=Math.max(0,...sv)+0.3, y=v=>H-6-(v-mn)/(mx-mn)*(H-12), x=i=>4+i/(NT-1)*(W-8);
+  g.strokeStyle='rgba(142,164,182,.5)';g.lineWidth=1;g.beginPath();g.moveTo(0,y(0));g.lineTo(W,y(0));g.stroke();
+  // fill
+  g.beginPath();g.moveTo(x(0),y(0));s.forEach((val,i)=>g.lineTo(x(i),y(isNaN(val)?0:val)));g.lineTo(x(NT-1),y(0));g.closePath();
+  g.fillStyle='rgba(255,106,61,.18)';g.fill();
+  g.beginPath();let pen=false;s.forEach((val,i)=>{if(isNaN(val)){pen=false;return;} pen?g.lineTo(x(i),y(val)):g.moveTo(x(i),y(val));pen=true;});g.strokeStyle='#ff6a3d';g.lineWidth=2;g.stroke();
+  if(!isNaN(s[cur])){g.beginPath();g.arc(x(cur),y(s[cur]),4,0,Math.PI*2);g.fillStyle='#fff';g.fill();}
+  g.fillStyle='#ecf2f6';g.font='600 12px Bricolage Grotesque, sans-serif';
+  const lab=fmt(s[cur],1)+' °C'; g.fillText(lab, Math.min(x(cur)+8,W-50), Math.max(12,y(s[cur])-8));
+}
+
+map.addEventListener('click',e=>{
+  if(region.globe){ if(globe.dragging)return; const g=globeInverse(e.clientX,e.clientY); if(g)showLocal(g.lat,g.lon); return; }
+  const r=map.getBoundingClientRect(), b=region.b;
+  let lon=b[0]+(e.clientX-r.left)/r.width*(b[1]-b[0]); if(lon>180)lon-=360;
+  const lat=b[3]-(e.clientY-r.top)/r.height*(b[3]-b[2]);
+  showLocal(lat,lon);
+});
+document.getElementById('geo').addEventListener('click',()=>{
+  const btn=document.getElementById('geo');
+  if(!navigator.geolocation){btn.textContent='Position indisponible ici, touchez la carte';return;}
+  btn.disabled=true;btn.textContent='Localisation…';
+  navigator.geolocation.getCurrentPosition(pos=>{btn.disabled=false;btn.textContent='Utiliser ma position';showLocal(pos.coords.latitude,pos.coords.longitude);},
+    ()=>{btn.disabled=false;btn.textContent='Position refusée, touchez la carte';},{timeout:8000});
+});
+
+window.addEventListener('resize',()=>{drawMap(); if(marker)showLocal(marker.lat,marker.lon,false);});
+
+// ---------- tabs ----------
+document.querySelectorAll('nav.tabs button').forEach(bt=>bt.addEventListener('click',()=>{
+  const t=bt.dataset.tab; document.querySelectorAll('nav.tabs button').forEach(o=>o.setAttribute('aria-pressed',o===bt));
+  document.getElementById('tab-globe').hidden=t!=='globe'; document.getElementById('tab-enso').hidden=t!=='enso';
+  if(t==='enso'){drawEnso();window.scrollTo({top:0});} else {drawMap();}
+}));
+// ---------- ENSO ----------
+const N34=ENSO.hov.n34, HD=ENSO.hov.dates, WK=ENSO.wk, ONI=ENSO.oni;
+function ensoState(v){ if(v>=2)return['El Niño très fort','hot'];if(v>=1.5)return['El Niño fort','hot'];if(v>=1)return['El Niño modéré','hot'];if(v>=0.5)return['El Niño faible','hot'];
+  if(v<=-1.5)return['La Niña forte','cool'];if(v<=-1)return['La Niña modérée','cool'];if(v<=-0.5)return['La Niña faible','cool'];return['Neutre','ok'];}
+function setupEnso(){
+  const last=N34[N34.length-1], w=WK[WK.length-1], [st]=ensoState(last);
+  const el=document.getElementById('enum'); el.textContent=fmt(last,1)+' °C'; el.classList.toggle('neg',last<0);
+  document.getElementById('ehead').firstChild.textContent='Le thermomètre d\'El Niño est à ';
+  const wkd=w[0].slice(0,2)+' '+{JAN:'janv.',FEB:'févr.',MAR:'mars',APR:'avr.',MAY:'mai',JUN:'juin',JUL:'juil.',AUG:'août',SEP:'sept.',OCT:'oct.',NOV:'nov.',DEC:'déc.'}[w[0].slice(2,5)];
+  document.getElementById('esub').textContent=`${st}. L'eau du centre du Pacifique est ${fmt(Math.abs(last),1)} °C ${last>=0?'plus chaude':'plus froide'} que la normale (mesure satellite du ${fdate(HD[HD.length-1])} ; moyenne de la semaine du ${wkd} selon la NOAA : ${fmt(w[3],1)} °C). Dès +0,5 °C on parle d'El Niño ; au-delà de +2 °C, d'un épisode majeur comme en 1997-98 ou 2015-16.`;
+  document.getElementById('e12').textContent=fmt(w[1],1)+' °C'; document.getElementById('e3').textContent=fmt(w[2],1)+' °C'; document.getElementById('e4').textContent=fmt(w[4],1)+' °C';
+  const o=ONI[ONI.length-1]; document.getElementById('eoni').textContent=fmt(o[2],1)+' °C'; const SEAS={DJF:'déc.-févr.',JFM:'janv.-mars',FMA:'févr.-avr.',MAM:'mars-mai',AMJ:'avr.-juin',MJJ:'mai-juil.',JJA:'juin-août',JAS:'juil.-sept.',ASO:'août-oct.',SON:'sept.-nov.',OND:'oct.-déc.',NDJ:'nov.-janv.'};
+  document.getElementById('eonilab').textContent='Moyenne officielle, '+(SEAS[o[0]]||o[0])+' '+o[1];
+}
+function cvs(id,h){const c=document.getElementById(id),dpr=Math.min(window.devicePixelRatio||1,2),W=c.clientWidth||300;c.width=W*dpr;c.height=h*dpr;c.style.height=h+'px';const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,h);return[g,W,h];}
+function drawN34(){
+  const [g,W,H]=cvs('e34',200), L=36,Rr=8,T=10,Bt=26, n=N34.length;
+  const t0=Date.parse(HD[0]), t1=Date.parse(HD[n-1]); const mn=Math.min(-1,...N34)-0.3, mx=Math.max(1,...N34)+0.3, y=v=>T+(mx-v)/(mx-mn)*(H-T-Bt), x=i=>L+(Date.parse(HD[i])-t0)/(t1-t0)*(W-L-Rr);
+  g.font='600 11px Bricolage Grotesque, sans-serif'; g.textBaseline='middle';
+  for(const v of [-2,-1,0,1,2,3]){ if(v<mn||v>mx)continue; g.strokeStyle=v===0?'rgba(236,242,246,.45)':'rgba(142,164,182,.18)'; g.beginPath();g.moveTo(L,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#8ea4b6'; g.textAlign='right'; g.fillText((v>0?'+':'')+v,L-6,y(v)); }
+  g.setLineDash([4,4]); g.strokeStyle='rgba(255,106,61,.6)'; g.beginPath();g.moveTo(L,y(0.5));g.lineTo(W-Rr,y(0.5));g.stroke(); g.strokeStyle='rgba(111,179,255,.6)'; g.beginPath();g.moveTo(L,y(-0.5));g.lineTo(W-Rr,y(-0.5));g.stroke(); g.setLineDash([]);
+  g.fillStyle='#ff6a3d'; g.textAlign='left'; g.fillText('seuil El Niño',L+4,y(0.5)-8); g.fillStyle='#6fb3ff'; g.fillText('seuil La Niña',L+4,y(-0.5)+9);
+  for(const [top,col] of [[true,'rgba(255,106,61,.22)'],[false,'rgba(111,179,255,.22)']]){ g.save(); g.beginPath(); g.rect(0,top?0:y(0),W,top?y(0):H); g.clip();
+    g.beginPath(); g.moveTo(x(0),y(0)); N34.forEach((v,i)=>g.lineTo(x(i),y(v))); g.lineTo(x(n-1),y(0)); g.closePath(); g.fillStyle=col; g.fill(); g.restore(); }
+  g.beginPath(); N34.forEach((v,i)=>i?g.lineTo(x(i),y(v)):g.moveTo(x(i),y(v))); g.strokeStyle='#ff6a3d'; g.lineWidth=2; g.stroke();
+  g.beginPath();g.arc(x(n-1),y(N34[n-1]),4,0,Math.PI*2);g.fillStyle='#fff';g.fill();
+  g.fillStyle='#ecf2f6'; g.textAlign='right'; g.fillText(fmt(N34[n-1],1)+' °C', x(n-1)-8, y(N34[n-1])-12);
+  // months
+  g.fillStyle='#8ea4b6'; g.textAlign='center'; let lastM='';
+  HD.forEach((d,i)=>{const m=d.slice(0,7); if(m!==lastM&&d.slice(8,10)<='05'&&(+d.slice(5,7))%2===1){lastM=m; const lab=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'][+d.slice(5,7)-1]; g.fillText(lab,x(i),H-10); g.strokeStyle='rgba(142,164,182,.15)';g.beginPath();g.moveTo(x(i),T);g.lineTo(x(i),H-Bt);g.stroke();}});
+}
+function drawHov(){
+  const rows=ENSO.hov.rows, lons=ENSO.hov.lons, nt=rows.length, nl=lons.length;
+  const [g,W,H]=cvs('ehov',380), L=76,Rr=8,T=8,Bt=26, pw=W-L-Rr, ph=H-T-Bt;
+  const img=g.createImageData(nl,nt); const d=img.data;
+  for(let t=0;t<nt;t++)for(let j=0;j<nl;j++){const v=rows[t][j],o=(t*nl+j)*4; if(v==null){d[o]=34;d[o+1]=44;d[o+2]=56;d[o+3]=255;continue;} const c=color(v*1.2); d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;}
+  const off2=document.createElement('canvas'); off2.width=nl; off2.height=nt; off2.getContext('2d').putImageData(img,0,0);
+  const ht0=Date.parse(HD[0]), ht1=Date.parse(HD[nt-1]), yt=ms=>T+(ms-ht0)/(ht1-ht0)*ph;
+  g.imageSmoothingEnabled=true;
+  for(let t=0;t<nt;t++){ const tm=Date.parse(HD[t]); const ya=t?yt((tm+Date.parse(HD[t-1]))/2):T, yb=t<nt-1?yt((tm+Date.parse(HD[t+1]))/2):T+ph; g.drawImage(off2,0,t,nl,1,L,ya,pw,Math.max(1,yb-ya+0.6)); }
+  const xl=lo=>L+(lo-lons[0])/(lons[nl-1]-lons[0])*pw;
+  g.font='600 11px Bricolage Grotesque, sans-serif'; g.fillStyle='#8ea4b6'; g.textAlign='center'; g.textBaseline='middle';
+  g.textAlign='left'; g.fillText('← Indonésie',L,H-10); g.textAlign='center'; g.fillText('milieu du Pacifique',xl(200),H-10); g.textAlign='right'; g.fillText('Pérou →',W-Rr,H-10);
+  g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=1.5; g.strokeRect(xl(190),T,xl(240)-xl(190),ph);
+  g.textAlign='right'; let lastM='';
+  HD.forEach((dd,t)=>{const m=dd.slice(0,7); if(m!==lastM&&(+dd.slice(5,7))%3===1&&dd.slice(8,10)<='05'){lastM=m; const yy=yt(Date.parse(dd)); g.fillText(MONTHS[+dd.slice(5,7)-1].slice(0,3)+' '+dd.slice(2,4), L-6, yy);}});
+  g.fillStyle='#ecf2f6'; g.textAlign='right'; g.fillText('aujourd\'hui', L-6, T+ph-4);
+  const tl='thermomètre (Niño 3.4)', tw=g.measureText(tl).width; g.fillStyle='rgba(12,26,39,.85)'; g.fillRect(xl(190)+1,T+1,tw+10,20);
+  g.fillStyle='#ecf2f6'; g.textAlign='left'; g.fillText(tl, xl(190)+6, T+11);
+}
+function drawOni(){
+  const [g,W,H]=cvs('eoni_c',220), L=32,Rr=8,T=10,Bt=24, n=ONI.length, pw=W-L-Rr, ph=H-T-Bt;
+  const mn=-2.6,mx=3.0, y=v=>T+(mx-v)/(mx-mn)*ph, x=i=>L+i/(n-1)*pw, bw=Math.max(1,pw/n);
+  g.font='600 11px Bricolage Grotesque, sans-serif'; g.textBaseline='middle';
+  for(const v of [-2,-1,0,1,2,3]){ g.strokeStyle=v===0?'rgba(236,242,246,.45)':'rgba(142,164,182,.15)'; g.beginPath();g.moveTo(L,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#8ea4b6';g.textAlign='right';g.fillText((v>0?'+':'')+v,L-5,y(v)); }
+  ONI.forEach((r,i)=>{const v=r[2]; g.fillStyle=v>=0.5?'#ff6a3d':v<=-0.5?'#6fb3ff':'rgba(142,164,182,.5)'; const yy=y(v),y0=y(0); g.fillRect(x(i),Math.min(yy,y0),bw+0.3,Math.abs(yy-y0));});
+  g.fillStyle='#8ea4b6'; g.textAlign='center';
+  ONI.forEach((r,i)=>{ if(r[0]==='DJF'&&r[1]%10===0) g.fillText(r[1],x(i),H-9); });
+  g.fillStyle='#ecf2f6'; g.font='600 10px Bricolage Grotesque, sans-serif';
+  for(const [yr,lab] of [[1982,'82-83'],[1997,'97-98'],[2015,'15-16'],[2023,'23-24']]){ const i=ONI.findIndex(r=>r[1]===yr+1&&r[0]==='DJF'); if(i>0){const v=ONI[i][2]; g.fillText(lab,x(i),y(v)-9);} }
+}
+function drawEnso(){setupEnso();drawN34();drawHov();drawOni();}
+window.addEventListener('resize',()=>{ if(!document.getElementById('tab-enso').hidden)drawEnso(); });
+
+updateHeader(); drawMap();
+</script>
+</body>
+</html>

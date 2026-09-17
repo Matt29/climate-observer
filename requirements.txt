@@ -1,0 +1,4 @@
+xarray>=2024.1
+netCDF4
+numpy
+cftime

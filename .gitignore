@@ -1,0 +1,9 @@
+.DS_Store
+*.swp
+.claude/
+.venv/
+__pycache__/
+cache/
+dist/
+*.part
+data/build_*.json
