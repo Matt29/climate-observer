@@ -24,8 +24,11 @@ import numpy as np
 import xarray as xr
 import cftime
 
+import surveillance
+
 OISST_BASE = "https://www.ncei.noaa.gov/data/sea-surface-temperature-optimum-interpolation/v2.1/access/avhrr/"
 PSL_FILES = "https://psl.noaa.gov/thredds/fileServer/Datasets/cpc_global_temp/"
+GLO12 = "cmems_mod_glo_phy-thetao_anfc_0.083deg_P1D-m"
 OISST_LTM = "https://psl.noaa.gov/thredds/fileServer/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1991-2020.nc"
 CPC_WK = "https://www.cpc.ncep.noaa.gov/data/indices/wksst9120.for"
 CPC_ONI = "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt"
@@ -114,27 +117,46 @@ def encode_cube(arr, scale=10, clip=120):
 
 
 def build_ocean(paths_by_date, ltm_path):
-    """Cube 1° des 30 derniers jours + stats globales."""
-    anoms, ssts, dates = [], [], []
+    """Cube 1° (xarray) des anomalies des 30 derniers jours."""
+    anoms, dates = [], []
     for k in sorted(paths_by_date):
-        a, s, d = open_anom(paths_by_date[k], ltm_path)
-        anoms.append(to_180(a)); ssts.append(to_180(s)); dates.append(d)
-    anom = xr.concat(anoms, "time"); sst = xr.concat(ssts, "time")
-    w = np.cos(np.deg2rad(anom.lat))
-    band = anom.sel(lat=slice(-60, 60)); wb = w.sel(lat=slice(-60, 60))
-    meta = dict(
-        dates=dates, nlat=180, nlon=360, lat0=-89.5, lon0=-179.5, step=1.0,
-        gmean=[round(float(x), 3) for x in anom.weighted(w).mean(("lat", "lon")).values],
-        g60=[round(float(x), 3) for x in band.weighted(wb).mean(("lat", "lon")).values],
-        sst60=[round(float(x), 2) for x in sst.sel(lat=slice(-60, 60)).weighted(wb).mean(("lat", "lon")).values],
-        frac_hot=[round(float(x), 3) for x in ((anom > 1).where(anom.notnull())).weighted(w).mean(("lat", "lon")).values],
-    )
-    a1 = anom.coarsen(lat=4, lon=4, boundary="exact").mean()
-    return meta, encode_cube(a1.values)
+        a, _, d = open_anom(paths_by_date[k], ltm_path)
+        anoms.append(to_180(a)); dates.append(d)
+    return dates, xr.concat(anoms, "time").coarsen(lat=4, lon=4, boundary="exact").mean()
+
+
+def ocean_forecast(obs1, t0, ltm_path, cache, days):
+    """Anomalie mer prévue à 1° par la méthode des écarts : anomalie observée du jour t0
+    + évolution prévue par GLO12 (Copernicus Marine) - évolution de la climatologie.
+    Le biais du modèle par rapport à OISST s'annule : pas de marche entre observé et prévu."""
+    path = os.path.join(cache, f"glo12_thetao_1deg_{t0:%Y%m%d}.nc")
+    if not os.path.exists(path):
+        import copernicusmarine   # identifiants : ~/.copernicusmarine ou COPERNICUSMARINE_SERVICE_USERNAME/PASSWORD
+        os.makedirs(cache, exist_ok=True)
+        ds = copernicusmarine.open_dataset(dataset_id=GLO12, variables=["thetao"], minimum_depth=0, maximum_depth=1,
+                                           start_datetime=t0.isoformat(), end_datetime=(t0 + dt.timedelta(days=days)).isoformat())
+        th = ds.thetao.isel(depth=0).coarsen(latitude=12, longitude=12, boundary="trim").mean()   # 1/12° -> 1°, blocs à bords entiers
+        th = th.assign_coords(latitude=np.floor(th.latitude) + 0.5, longitude=np.floor(th.longitude) + 0.5)
+        th.rename(latitude="lat", longitude="lon").load().to_netcdf(path + ".part")
+        os.replace(path + ".part", path)
+    th = xr.open_dataarray(path).reindex(lat=obs1.lat, lon=obs1.lon, method="nearest", tolerance=0.01)   # GLO12 s'arrête à 80°S
+    tdates = [str(x)[:10] for x in th.time.values]
+    assert tdates[0] == t0.isoformat(), f"GLO12 sans le jour d'ancrage {t0}"
+    clim, idx = oisst_ltm(ltm_path)
+    def clim1(d):
+        c = clim.isel(time=idx.get((d.month, d.day), idx[(2, 28)])).load()
+        return to_180(c).coarsen(lat=4, lon=4, boundary="exact").mean().values
+    a0, m0, c0 = obs1.isel(time=-1).values, th.isel(time=0).values, clim1(t0)
+    out = []
+    for k in range(1, len(tdates)):
+        d = dt.date.fromisoformat(tdates[k])
+        out.append(a0 + (th.isel(time=k).values - m0) - (clim1(d) - c0))
+    return np.array(out)
 
 
 # ---------------------------------------------------------------- terre (CPC)
-def build_land(d0, d1, cache):
+def build_land(d0, d1, cache, days):
+    """Anomalie 0,5° des jours d0..d1 et climatologie (Tmax+Tmin)/2 des jours d1..d1+days (pour la prévision)."""
     year = d1.year
     n = (d1 - d0).days + 1
 
@@ -151,20 +173,80 @@ def build_land(d0, d1, cache):
         assert obs.sizes["time"] == n, f"jours manquants dans {var}"
         ltm = xr.open_dataset(get(PSL_FILES + f"{var}.day.ltm.1991-2020.nc",
                                   os.path.join(cache, f"{var}.day.ltm.1991-2020.nc")), decode_times=False)
-        days = cftime.num2date(ltm.time.values, ltm.time.attrs["units"], "gregorian")   # année 1 : cftime
-        i0 = next(k for k, d in enumerate(days) if (d.month, d.day) == (d0.month, d0.day))
-        return obs, ltm[var].values[i0:i0 + n]
+        days_ = cftime.num2date(ltm.time.values, ltm.time.attrs["units"], "gregorian")   # année 1 : cftime
+        i0 = next(k for k, d in enumerate(days_) if (d.month, d.day) == (d0.month, d0.day))
+        return obs, ltm[var].isel(time=[(i0 + k) % len(days_) for k in range(n + days)]).values
 
     tx, lxv = field("tmax")
     tn, ln = field("tmin")
-    anom = (tx.values + tn.values) / 2 - (lxv + ln) / 2
-    da = xr.DataArray(anom, dims=("time", "lat", "lon"),
-                      coords=dict(time=tx.time.values, lat=tx.lat.values, lon=tx.lon.values))
-    da = to_180(da).sortby("lat")
-    w = np.cos(np.deg2rad(da.lat))
-    lmean = da.weighted(w).mean(("lat", "lon")).values
-    a1 = da.coarsen(lat=2, lon=2, boundary="exact").mean()
-    return [None if np.isnan(x) else round(float(x), 2) for x in lmean], encode_cube(a1.values, clip=127)
+    clim = (lxv + ln) / 2
+    wrap = lambda arr: to_180(xr.DataArray(arr, dims=("time", "lat", "lon"),
+                                           coords=dict(lat=tx.lat.values, lon=tx.lon.values))).sortby("lat")
+    return wrap((tx.values + tn.values) / 2 - clim[:n]), wrap(clim[n - 1:])
+
+
+def land_forecast(anom05, clim05, t0, cache, days):
+    """Anomalie terre prévue à 1°, même méthode des écarts avec ECMWF IFS open data (2t, run 00 UTC du jour t0).
+    Moyenne des échéances 00/06/12/18 UTC par jour, comparable à (Tmax+Tmin)/2 à la méthode près, ce qui s'annule dans l'écart."""
+    path = os.path.join(cache, f"ifs_2t_{t0:%Y%m%d}00.grib2")
+    if not os.path.exists(path):
+        from ecmwf.opendata import Client
+        os.makedirs(cache, exist_ok=True)
+        Client(source="ecmwf").retrieve(date=t0.isoformat(), time=0, type="fc", param="2t",
+                                        step=list(range(0, 24 * days, 6)), target=path + ".part")
+        os.replace(path + ".part", path)
+    t2 = xr.open_dataset(path, engine="cfgrib", indexpath="").t2m.sortby("latitude")
+    # la grille 0,25° d'IFS contient exactement les centres 0,5° de CPC : sélection, pas d'interpolation (ni scipy)
+    daily = t2.coarsen(step=4, boundary="trim").mean().sel(latitude=anom05.lat.values, longitude=anom05.lon.values, method="nearest").values
+    a0 = anom05.isel(time=-1).values
+    fc = np.array([a0 + (daily[k] - daily[0]) - (clim05.values[k] - clim05.values[0]) for k in range(1, len(daily))])
+    return xr.DataArray(fc, dims=("time", "lat", "lon"), coords=dict(lat=anom05.lat, lon=anom05.lon)) \
+             .coarsen(lat=2, lon=2, boundary="exact").mean().values
+
+
+# ---------------------------------------------------------------- glace de mer (carte)
+ICE_YEARS = (1982, 2000, 2012, 2020)
+
+
+def ice_grid(path):
+    """Concentration de glace OISST à 0,5°, uint8 0-100, 255 = terre. Lignes par latitude croissante, lon -180..180."""
+    ds = xr.open_dataset(path)
+    ice, sst = to_180(ds.ice.isel(time=0, zlev=0)), to_180(ds.sst.isel(time=0, zlev=0))
+    c = ice.fillna(0).where(sst.notnull()).coarsen(lat=2, lon=2, boundary="exact").mean().values
+    return np.where(np.isnan(c), 255, np.round(c * 100)).astype(np.uint8)
+
+
+def ice_maps(today_path, t0, cache):
+    """Calottes nord (>= 40°N) et sud (<= 50°S) du jour et de la même date les années repères."""
+    cut = lambda g: dict(north=base64.b64encode(g[260:].tobytes()).decode(), south=base64.b64encode(g[:80].tobytes()).decode())
+    ref = {}
+    for y in ICE_YEARS:
+        d = dt.date(y, t0.month, min(t0.day, 28) if t0.month == 2 else t0.day)
+        ref[y] = cut(ice_grid(next(iter(fetch_oisst(oisst_files_between(d, d), os.path.join(cache, "oisst_ref")).values()))))
+    return dict(step=0.5, nlon=720, lon0=-179.75, north_lat0=40.25, north_nlat=100, south_lat0=-89.75, south_nlat=80,
+                now=cut(ice_grid(today_path)), ref=ref)
+
+
+def series(ocean1, land1):
+    """Moyennes quotidiennes à 1° sur tout le cube (observé + prévu), mêmes calculs des deux côtés de la frontière."""
+    lat = ocean1.lat
+    w = np.cos(np.deg2rad(lat)); band = slice(-60, 60)
+    r = lambda da, nd: [None if np.isnan(x) else round(float(x), nd) for x in da.values]
+    return dict(
+        gmean=r(ocean1.weighted(w).mean(("lat", "lon")), 3),
+        g60=r(ocean1.sel(lat=band).weighted(w.sel(lat=band)).mean(("lat", "lon")), 3),
+        frac_hot=r((ocean1 > 1).where(ocean1.notnull()).weighted(w).mean(("lat", "lon")), 3),
+        lmean=r(land1.weighted(w).mean(("lat", "lon")), 2),
+    )
+
+
+def soft(name, fn):
+    """Sources optionnelles : un échec ne casse pas le build quotidien, le bloc est omis de la page."""
+    try:
+        return fn()
+    except Exception as e:
+        print(f"[dégradé] {name} : {type(e).__name__}: {e}", file=sys.stderr)
+        return None
 
 
 # ---------------------------------------------------------------- ENSO
@@ -199,6 +281,7 @@ def main():
     ap.add_argument("--days", type=int, default=30)
     ap.add_argument("--cache", default="cache")
     ap.add_argument("--out", default="data/build.json")
+    ap.add_argument("--fc-days", type=int, default=10)
     args = ap.parse_args()
 
     today = dt.date.today()
@@ -218,15 +301,37 @@ def main():
     enso_paths = {**hist_paths, **recent_paths}
 
     ltm_path = get(OISST_LTM, os.path.join(args.cache, "oisst", "sst.day.mean.ltm.1991-2020.nc"))
-    meta, ocean_b64 = build_ocean(recent_paths, ltm_path)
-    lmean, land_b64 = build_land(start, end, os.path.join(args.cache, "cpc"))
-    meta["lmean"] = lmean
+    dates, ocean1 = build_ocean(recent_paths, ltm_path)
+    anom05, clim05 = build_land(start, end, os.path.join(args.cache, "cpc"), args.fc_days)
+    land1 = anom05.coarsen(lat=2, lon=2, boundary="exact").mean()
     enso = build_enso(enso_paths, ltm_path)
 
+    # prévision : la mer fixe le nombre de jours, limité aux jours où la terre existe aussi (NaN si la terre échoue)
+    ofc = soft("prévision mer GLO12", lambda: ocean_forecast(ocean1, end, ltm_path, os.path.join(args.cache, "glo12"), args.fc_days))
+    lfc = soft("prévision terre ECMWF", lambda: land_forecast(anom05, clim05, end, os.path.join(args.cache, "ecmwf"), args.fc_days))
+    nobs, nfc = len(dates), 0 if ofc is None else len(ofc) if lfc is None else min(len(ofc), len(lfc))
+    if nfc:
+        def pad(fc):   # IFS open data s'arrête à 240 h : la terre a un jour de moins que la mer
+            out = np.full((nfc, 180, 360), np.nan)
+            if fc is not None:
+                out[:min(nfc, len(fc))] = fc[:nfc]
+            return out
+        stack = lambda obs, fc: xr.concat([obs, obs.isel(time=[0] * nfc).copy(data=pad(fc))], "time")
+        ocean1, land1 = stack(ocean1, ofc), stack(land1, lfc)
+        dates += [(end + dt.timedelta(days=k)).isoformat() for k in range(1, nfc + 1)]
+
+    meta = dict(dates=dates, nobs=nobs, nlat=180, nlon=360, lat0=-89.5, lon0=-179.5, step=1.0,
+                fc_land=lfc is not None, **series(ocean1, land1))
+    enso["probs"] = soft("probabilités ENSO CPC", surveillance.enso_probs)
+    surv = dict(ice=soft("NSIDC", surveillance.sea_ice), coral=soft("Coral Reef Watch", surveillance.coral),
+                ice_maps=soft("cartes de glace", lambda: ice_maps(recent_paths[max(recent_paths)], end, args.cache)))
+
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    json.dump(dict(meta=meta, ocean_b64=ocean_b64, land_b64=land_b64, enso=enso,
-                   built_at=dt.datetime.utcnow().isoformat() + "Z"), open(args.out, "w"))
-    print("ok ->", args.out, "| océan 60S-60N", meta["g60"][-1], "| terre", lmean[-1], "| Niño 3.4", enso["hov"]["n34"][-1])
+    json.dump(dict(meta=meta, ocean_b64=encode_cube(ocean1.values), land_b64=encode_cube(land1.values, clip=127),
+                   enso=enso, surv=surv, built_at=dt.datetime.now(dt.timezone.utc).isoformat()), open(args.out, "w"))
+    t = nobs - 1
+    print("ok ->", args.out, "| océan 60S-60N", meta["g60"][t], "| terre", meta["lmean"][t], "| Niño 3.4", enso["hov"]["n34"][-1],
+          "| prévision", nfc, "j (terre", "ok" if lfc is not None else "absente", ")")
 
 
 if __name__ == "__main__":

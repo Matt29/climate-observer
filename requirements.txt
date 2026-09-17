@@ -2,3 +2,7 @@ xarray>=2024.1
 netCDF4
 numpy
 cftime
+copernicusmarine
+ecmwf-opendata
+cfgrib
+eccodes

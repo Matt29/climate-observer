@@ -8,7 +8,8 @@ block = (f"const META={json.dumps(d['meta'])};\n"
          f'const B64="{d["ocean_b64"]}";\n'
          f"const COAST={coast};\n"
          f"const ENSO={json.dumps(d['enso'])};\n"
-         f'const LB64="{d["land_b64"]}";\n')
+         f'const LB64="{d["land_b64"]}";\n'
+         f"const SURV={json.dumps(d.get('surv') or {})};\n")
 tpl = open(os.path.join(root, "web/template.html")).read()
 assert "/*__DATA__*/" in tpl
 out = tpl.replace("/*__DATA__*/", block)

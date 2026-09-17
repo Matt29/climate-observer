@@ -10,6 +10,7 @@ Prototype validé en chat le 17/09/2026 sur les données du 17/08 au 15/09/2026.
 
     pipeline/build_data.py   télécharge, calcule, écrit data/build.json (~5 Mo)
     build_page.py            injecte les données dans web/template.html -> dist/index.html
+    pipeline/surveillance.py glace (NSIDC), coraux (CRW), probabilités ENSO (CPC) ; `python pipeline/surveillance.py` = self-check
     web/template.html        toute l'UI (HTML/CSS/JS), zéro lib externe sauf Google Fonts
     web/coast.min.json       trait de côte Natural Earth 110m compacté (polylignes [lon,lat])
     .github/workflows/       cron quotidien + déploiement GitHub Pages (à adapter Vercel/R2)
@@ -42,6 +43,11 @@ sparkline, onglets, graphes ENSO à axes temporels proportionnels (mélange 5 jo
 | Terre | NOAA CPC Global Daily Temp Tmax/Tmin (PSL) | J-1 à J-2 | 1991-2020 (ltm PSL) |
 | ENSO hebdo | CPC `wksst9120.for` | lundi | 1991-2020 |
 | ONI | CPC `oni.ascii.txt` | ~10 du mois | glissante 30 ans |
+| Probabilités ENSO | CPC `enso/roni/probabilities/` (table HTML) | ~10 du mois | RONI |
+| Prévision mer 10 j | Copernicus Marine GLO12 `thetao` 0,49 m (compte requis) | J0 | écart ancré sur OISST 1991-2020 |
+| Prévision terres 9 j | ECMWF IFS open data `2t`, run 00 UTC du dernier jour observé | J0, rétention ~4 j | écart ancré sur CPC 1991-2020 |
+| Glace de mer | NSIDC Sea Ice Index v4 (chiffres) + champ `ice` OISST (carte) | J-1 | normale recalculée 1991-2020 (NSIDC livre 1981-2010) |
+| Coraux | NOAA Coral Reef Watch, ERDDAP `NOAA_DHW` `CRW_BAA_7D_MAX` (0,5°) | J-1 | alertes 0-4 |
 
 ## Pièges connus (déjà rencontrés)
 
@@ -58,11 +64,20 @@ sparkline, onglets, graphes ENSO à axes temporels proportionnels (mélange 5 jo
 3. Le calendrier des fichiers ltm est `gregorian` année 1 : passer par `cftime.num2date`, pas par datetime.
 4. CPC est un produit stations : trous (Antarctique, Groenland, Sahara, Amazonie) et quelques cellules
    aberrantes (jusqu'à −50 °C). Pour une couverture complète : ERA5 (CDS, J-5) ou analyse GFS 00Z.
-5. Un artifact Claude publié ne peut pas fetcher : la page doit être régénérée et hébergée (Pages/Vercel/R2).
+5. **Prévisions = méthode des écarts** : `anomalie(d) = anomalie observée(J0) + [modèle(d) − modèle(J0)] − [clim(d) − clim(J0)]`.
+   Soustraire la climatologie OISST/CPC au champ brut du modèle ferait une marche à la frontière (biais modèle).
+   Vérifié le 15/09 : pas de saut (écart jour à jour médian 0,1 °C mer, ~1 °C terre, identique des deux côtés).
+   IFS open data s'arrête à 240 h : la prévision est limitée aux jours communs mer et terre (9 j).
+   Les séries (`g60`, `frac_hot`, `lmean`) sont calculées à 1° sur tout le cube pour la même raison (0,25° avant : 0,80 → 0,80).
+   Chaque source optionnelle (prévisions, NSIDC, CRW, probabilités) échoue en mode dégradé : bloc omis, build maintenu.
+6. **Glace** : avant 1987 NSIDC n'a qu'une valeur tous les 2 jours, l'année repère prend le jour voisin (±1).
+   Comparer à 2020 serait trompeur (2ᵉ plus faible Arctique) : 1982 par défaut. Coraux : `NOAA_DHW` n'a pas de masque
+   récifs, on affiche la part de l'océan tropical en alerte, pas « des récifs ».
+7. Un artifact Claude publié ne peut pas fetcher : la page doit être régénérée et hébergée (Pages/Vercel/R2).
 
 ## Roadmap
 
-- Prévision : ECMWF Open Data (T2m, 10 j) + plumes ENSO CPC/IRI.
 - Servir le 0,25° en tuiles (COG/PMTiles) plutôt qu'embarquer le 1° ; petit Zarr pour le clic.
 - Rendu vidéo quotidien du globe (matplotlib/cartopy ou Playwright + ffmpeg) pour TikTok.
-- SOI, sous-surface TAO/TRITON, vagues de chaleur marines (catégories Hobday).
+- SOI, sous-surface TAO/TRITON, vagues de chaleur marines (catégories Hobday, percentile 90 à calculer).
+- `data/build.json` (~7,6 Mo) est versionné et régénéré chaque jour : à sortir de git si l'historique gonfle.
