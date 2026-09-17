@@ -59,6 +59,9 @@ footer{padding:28px 18px 0;color:var(--mute);font-size:13px;line-height:1.5;max-
 footer a{color:var(--ink)}
 .next{margin:22px 18px 0;padding:14px 16px;border-left:3px solid var(--accent);color:var(--mute);font-size:14px;line-height:1.5}
 .next b{color:var(--ink)}
+.local ul{margin:10px 0 0;padding-left:18px;color:var(--mute);font-size:15px;line-height:1.5}
+.local li{margin:6px 0}.local li b{color:var(--ink)}
+.local .fine{font-size:13px}
 @media (prefers-reduced-motion: reduce){ .local{transition:none} }
 </style>
 </head>
@@ -98,7 +101,7 @@ footer a{color:var(--ink)}
   <button class="geo" id="geo">Utiliser ma position</button>
 </section>
 
-<div class="next">Ce prototype tourne sur une photo des 30 derniers jours d'observations. <b>La version complète</b> se rafraîchit chaque matin et ajoute une prévision à 10 jours, à la même adresse.</div>
+<div class="local" id="bulletin"></div>
 
 </section>
 <section id="tab-enso" hidden>
@@ -114,6 +117,7 @@ footer a{color:var(--ink)}
   <div class="stat"><b id="e12">+0,0 °C</b><span>Au large du Pérou</span></div>
   <div class="stat"><b id="eoni">+0,0 °C</b><span id="eonilab">Moyenne officielle sur 3 mois</span></div>
 </div>
+<div class="local" id="eimpact"></div>
 <div class="local">
   <h2>Le thermomètre d'El Niño sur un an</h2>
   <p>Écart à la normale de l'eau dans le rectangle Niño 3.4, mesuré par satellite. Au-dessus de la ligne rouge (+0,5 °C), on parle d'El Niño ; sous la ligne bleue (−0,5 °C), de La Niña. Entre les deux, le Pacifique est neutre.</p>
@@ -534,10 +538,52 @@ function drawOni(){
   g.fillStyle='#ecf2f6'; g.font='600 10px Bricolage Grotesque, sans-serif';
   for(const [yr,lab] of [[1982,'82-83'],[1997,'97-98'],[2015,'15-16'],[2023,'23-24']]){ const i=ONI.findIndex(r=>r[1]===yr+1&&r[0]==='DJF'); if(i>0){const v=ONI[i][2]; g.fillText(lab,x(i),y(v)-9);} }
 }
-function drawEnso(){setupEnso();drawN34();drawHov();drawOni();}
+const IMPACTS={
+  hot:{t:'Impacts possibles d\'El Niño',l:[
+    ['Plus sec','Indonésie, est de l\'Australie, Philippines, sud de l\'Afrique, nord du Brésil ; mousson indienne souvent plus faible.'],
+    ['Plus humide','côtes du Pérou et de l\'Équateur, sud du Brésil et Argentine, Afrique de l\'Est (octobre-décembre), sud des États-Unis en hiver.'],
+    ['Cyclones','moins d\'ouragans dans l\'Atlantique, davantage dans le Pacifique central et est.'],
+    ['Océan','blanchissement des coraux, fortes baisses de la pêche à l\'anchois au Pérou.'],
+    ['Planète','l\'année qui suit un fort El Niño bat souvent des records de chaleur mondiale (2016, 2024).'],
+    ['France et Europe','effet faible, difficile à distinguer du reste de la météo.']]},
+  cool:{t:'Impacts possibles de La Niña',l:[
+    ['Plus humide','Indonésie, Australie (risque d\'inondations), nord de l\'Amérique du Sud.'],
+    ['Plus sec','Afrique de l\'Est, sud des États-Unis, Argentine et sud du Brésil, côte du Pérou.'],
+    ['Cyclones','saison des ouragans souvent plus active dans l\'Atlantique.'],
+    ['Planète','année un peu moins chaude, sans interrompre le réchauffement de fond.'],
+    ['France et Europe','effet faible, difficile à distinguer du reste de la météo.']]},
+  ok:{t:'Impacts possibles',l:[
+    ['Pacifique neutre','pas d\'influence marquée sur la météo mondiale : d\'autres moteurs dominent. On surveille la tendance du thermomètre.']]}};
+function setupImpacts(){
+  const [st,k]=ensoState(N34[N34.length-1]), I=IMPACTS[k];
+  document.getElementById('eimpact').innerHTML=`<h2>${I.t}</h2><p>État actuel : <b>${st}</b>.</p><ul>${I.l.map(([a,b])=>`<li><b>${a}</b> : ${b}</li>`).join('')}</ul>`+
+    `<p class="fine">Tendances observées lors des épisodes passés (NOAA, OMM), pas une prévision : chaque épisode est différent. Les effets culminent en général entre décembre et mars.</p>`;
+}
+function drawEnso(){setupEnso();setupImpacts();drawN34();drawHov();drawOni();}
+
+// ---------- bulletin du jour ----------
+function oceanStats(t,b){ // moyenne pondérée cos(lat) et parts > +1/+2 °C, sur l'océan de la boîte b=[lon0,lon1,lat0,lat1]
+  let s=0,w=0,h2=0; for(let i=0;i<NLAT;i++){const lat=-89.5+i; if(b&&(lat<b[2]||lat>b[3]))continue; const c=Math.cos(lat*Math.PI/180);
+    for(let j=0;j<NLON;j++){let lon=-179.5+j; if(b&&lon<b[0])lon+=360; if(b&&lon>b[1])continue; const x=v(t,i,j); if(x===LAND)continue; s+=c*x/10; w+=c; if(x>=20)h2+=c;}}
+  return {mean:w?s/w:NaN, hot2:w?h2/w:NaN};
+}
+function setupBulletin(){
+  const t=NT-1, g=META.g60, d30=g[t]-g[0], d7=g[t]-g[Math.max(0,t-7)];
+  const L=META.lmean.map((x,i)=>[x,i]).filter(([x])=>x!=null), lnow=L.length?L[L.length-1][0]:null, ld=L.length>1?lnow-L[0][0]:null;
+  const trend=d=>Math.abs(d)<0.05?'stable sur un mois':(d>0?'en hausse':'en baisse')+' de '+fmt(Math.abs(d)).slice(1)+' °C en un mois';
+  const regs=REGIONS.filter(r=>r.b&&r.n!=='Monde').map(r=>[r.n,oceanStats(t,r.b).mean]).sort((a,b)=>b[1]-a[1]);
+  const [st]=ensoState(N34[N34.length-1]);
+  document.getElementById('bulletin').innerHTML=`<h2>Bulletin du ${fdate(META.dates[t])}</h2><ul>`+
+    `<li><b>Océans</b> : ${fmt(g[t])} °C par rapport à la normale, ${trend(d30)} (${fmt(d7)} °C sur 7 jours).</li>`+
+    `<li><b>Chaleur marine</b> : ${Math.round(META.frac_hot[t]*100)} % de la surface des océans est à plus de +1 °C, ${Math.round(oceanStats(t).hot2*100)} % à plus de +2 °C.</li>`+
+    `<li><b>Par région</b> : ${regs.map(([n,m])=>n+' '+fmt(m,1)+' °C').join(', ')}.</li>`+
+    (lnow==null?'':`<li><b>Continents</b> : ${fmt(lnow,1)} °C par rapport à la normale, ${trend(ld)}.</li>`)+
+    `<li><b>Pacifique équatorial</b> : ${st}, le thermomètre d'El Niño est à ${fmt(N34[N34.length-1],1)} °C (détails dans l'onglet El Niño en direct).</li></ul>`+
+    `<p class="fine">Écarts à la moyenne 1991-2020 pour la même date. Les derniers jours sont préliminaires et peuvent bouger de quelques centièmes.</p>`;
+}
 window.addEventListener('resize',()=>{ if(!document.getElementById('tab-enso').hidden)drawEnso(); });
 
-updateHeader(); drawMap();
+updateHeader(); drawMap(); setupBulletin();
 </script>
 </body>
 </html>
