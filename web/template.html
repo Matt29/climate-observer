@@ -4,65 +4,82 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Climate Observer, l'écart à la normale, jour après jour</title>
+<link rel="canonical" href="https://oceandataconsulting.fr/climate-observer">
+<meta name="description" content="Écart à la normale des océans et des continents, mis à jour chaque jour : globe, prévision 9 jours, El Niño, glace de mer, coraux.">
+<meta property="og:title" content="Climate Observer">
+<meta property="og:description" content="Écart à la normale des océans et des continents, mis à jour chaque jour : globe, prévision 9 jours, El Niño, glace de mer, coraux.">
+<meta property="og:url" content="https://oceandataconsulting.fr/climate-observer">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0c1a27; --bg2:#122536; --ink:#ecf2f6; --mute:#8ea4b6; --line:#213b50;
-  --land:#1c2a36; --hot:#ff6a3d; --cold:#6fb3ff; --accent:#ffd166;
+  --bg:#061726; --bg2:#0A2540; --ink:#fff; --mute:#93A6B6; --line:rgba(255,255,255,.08);
+  --land:#16202A; --hot:#ff6a3d; --cold:#6fb3ff; --accent:#43BCCD;
 }
 @media (prefers-color-scheme: light){ :root:not([data-theme="light"]){ } }
 :root[data-theme="dark"]{}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 body{max-width:1100px;margin:0 auto;padding:0 0 60px}
+.brandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;background:#0E345D;border-bottom:1px solid var(--line)}
+.brandbar-name{display:flex;align-items:center;gap:8px;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-weight:600;font-size:14px;color:var(--ink);text-decoration:none}
+.brandbar-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.brandbar-contact{font-family:"IBM Plex Sans",sans-serif;font-size:13px;font-weight:500;color:var(--accent);text-decoration:none}
+.brandbar-name:hover,.brandbar-contact:hover{text-decoration:underline}
+.brandbar-name:focus-visible,.brandbar-contact:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 header{padding:22px 18px 6px}
-.kicker{color:var(--mute);font-size:15px;font-weight:500;letter-spacing:.01em}
-h1{margin:6px 0 0;font-size:clamp(34px,7.5vw,68px);line-height:.98;font-weight:700;font-variation-settings:"opsz" 96;letter-spacing:-.02em}
+.kicker{color:var(--accent);font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;font-size:12px;font-weight:500;letter-spacing:.12em;text-transform:uppercase}
+h1{margin:6px 0 0;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:clamp(34px,7.5vw,68px);line-height:.98;font-weight:700;letter-spacing:-.02em}
 h1 .num{font-weight:800;color:var(--hot);white-space:nowrap}
 h1 .num.neg{color:var(--cold)}
 .sub{margin:12px 0 0;color:var(--mute);font-size:15px;max-width:60ch;line-height:1.45}
 .stats{display:flex;gap:22px;padding:14px 18px 6px;flex-wrap:wrap}
-.stat b{display:block;font-size:24px;font-weight:700;letter-spacing:-.01em}
+.stat b{display:block;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:24px;font-weight:700;letter-spacing:-.01em}
 .stat span{color:var(--mute);font-size:13px}
 .mapwrap{position:relative;margin:10px 0 0;background:#060d15;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 canvas#map{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none;user-select:none}
 .regions{display:flex;gap:6px;padding:10px 18px 0;flex-wrap:wrap}
 .regions button,.ctrl button{font:inherit;font-size:14px;font-weight:600;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer}
-.regions button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.regions button[aria-pressed="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 .regions button:focus-visible,.ctrl button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .legend{display:flex;align-items:center;gap:10px;padding:10px 18px 0;color:var(--mute);font-size:12px}
 .legend .bar{flex:1;height:10px;border-radius:5px;background:linear-gradient(90deg,#0a3d78,#4a8fd9,#ecebe4,#f58a3e,#c81e1e,#5c0a0a)}
 .ctrl{display:flex;align-items:center;gap:12px;padding:14px 18px 0}
 .ctrl button{width:44px;height:44px;padding:0;border-radius:50%;font-size:18px;display:grid;place-items:center;flex:none}
-.ctrl input[type=range]{flex:1;accent-color:var(--hot);height:44px}
-.ctrl .date{min-width:9.5ch;font-weight:600;font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
+.ctrl input[type=range]{flex:1;accent-color:var(--accent);height:44px}
+.ctrl .date{min-width:9.5ch;font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;font-weight:600;font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
 .local{margin:26px 18px 0;padding:18px 18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--bg2)}
-.local h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.local h2{margin:0;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em}
 .local p{margin:8px 0 0;color:var(--mute);font-size:15px;line-height:1.45}
-.local .big{font-size:clamp(44px,12vw,84px);font-weight:800;line-height:1;margin:14px 0 4px;letter-spacing:-.03em;color:var(--hot)}
+.local .big{font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:clamp(44px,12vw,84px);font-weight:800;line-height:1;margin:14px 0 4px;letter-spacing:-.03em;color:var(--hot)}
 .local .big.neg{color:var(--cold)}
 .local .big small{font-size:.35em;font-weight:600;color:var(--mute);letter-spacing:0;margin-left:6px}
-.local .where{color:var(--ink);font-weight:600}
+.local .where{color:var(--ink);font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;font-weight:600}
 .local .tag{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;background:#2b1a16;color:#ffb39f}
 .local .tag.cool{background:#12283a;color:#9ccbff}.local .tag.ok{background:#1a2c2a;color:#9fe0c8}
-.geo{margin-top:12px;font:inherit;font-size:15px;font-weight:600;background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:11px 16px;cursor:pointer}
+.geo{margin-top:12px;font:inherit;font-size:15px;font-weight:600;background:var(--accent);color:var(--bg);border:0;border-radius:10px;padding:11px 16px;cursor:pointer;box-shadow:0 8px 24px rgba(67,188,205,.28)}
 .geo:disabled{opacity:.5}
 canvas#spark{display:block;width:100%;height:90px;margin-top:14px}
 .sparklab{display:flex;justify-content:space-between;color:var(--mute);font-size:12px;margin-top:4px}
 nav.tabs{display:flex;gap:6px;padding:16px 18px 0}
-nav.tabs button{font:inherit;font-size:15px;font-weight:700;color:var(--mute);background:transparent;border:0;border-bottom:2px solid transparent;padding:8px 2px;margin-right:12px;cursor:pointer}
-nav.tabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--hot)}
+nav.tabs button{font:inherit;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:15px;font-weight:700;color:var(--mute);background:transparent;border:0;border-bottom:2px solid transparent;padding:8px 2px;margin-right:12px;cursor:pointer}
+nav.tabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 canvas.ech{display:block;width:100%;margin-top:14px}
 footer{padding:28px 18px 0;color:var(--mute);font-size:13px;line-height:1.5;max-width:70ch}
 footer a{color:var(--ink)}
+.brandfoot{display:block;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.brandfoot a{color:var(--accent);text-decoration:none}
+.brandfoot a:hover,.brandfoot a:focus-visible{text-decoration:underline}
+.brandfoot a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .next{margin:22px 18px 0;padding:14px 16px;border-left:3px solid var(--accent);color:var(--mute);font-size:14px;line-height:1.5}
 .next b{color:var(--ink)}
 .local ul{margin:10px 0 0;padding-left:18px;color:var(--mute);font-size:15px;line-height:1.5}
 .local li{margin:6px 0}.local li b{color:var(--ink)}
 .local .fine{font-size:13px}
-.local h3{margin:18px 0 0;font-size:17px}
+.local h3{margin:18px 0 0;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:17px}
 .fcnote{padding:2px 18px 0;color:var(--mute);font-size:12px}
 .poles{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
 .pole{flex:1 1 240px;min-width:0}
@@ -70,12 +87,16 @@ footer a{color:var(--ink)}
 .pole p{margin:6px 0 0}
 .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:middle}
 .prow{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:13px;color:var(--mute)}
-.prow>span:first-child{width:96px;flex:none}.prow>span:last-child{width:44px;text-align:right;color:var(--ink);font-weight:600}
+.prow>span:first-child{width:96px;flex:none}.prow>span:last-child{width:44px;text-align:right;color:var(--ink);font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;font-weight:600}
 .pbar{flex:1;display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
 @media (prefers-reduced-motion: reduce){ .local{transition:none} }
 </style>
 </head>
 <body>
+<div class="brandbar">
+  <a class="brandbar-name" href="https://oceandataconsulting.fr" target="_blank" rel="noopener"><span class="brandbar-dot"></span>OceanData Consulting</a>
+  <a class="brandbar-contact" href="https://oceandataconsulting.fr/#contact" target="_blank" rel="noopener">Contact</a>
+</div>
 <nav class="tabs" aria-label="Sections"><button data-tab="globe" aria-pressed="true">Le globe</button><button data-tab="enso" aria-pressed="false">El Niño en direct</button></nav>
 <section id="tab-globe">
 <header>
@@ -160,7 +181,8 @@ footer a{color:var(--ink)}
   <canvas id="eoni_c" class="ech"></canvas>
 </div>
 </section>
-<footer>Sources : mer, NOAA OISST v2.1 (0,25°, anomalie recalculée sur la base 1991-2020) ; terre, NOAA CPC Global Daily Temperature (0,5°, moyenne de Tmax et Tmin, base 1991-2020). Agrégées à 1° pour l'affichage. Trait de côte Natural Earth. Indices et probabilités ENSO : NOAA CPC. Prévision mer : E.U. Copernicus Marine Service Information (GLO12). Prévision terres : ECMWF open data (CC BY 4.0). Prévisions calculées en ajoutant l'évolution prévue par le modèle à l'écart observé. Glace de mer : NSIDC Sea Ice Index v4 et OISST. Coraux : NOAA Coral Reef Watch. Derniers jours en statut préliminaire. Zones grises : pas de mesure (Antarctique, Groenland, trous de stations). Un projet OceanData Consulting.</footer>
+<footer>Sources : mer, NOAA OISST v2.1 (0,25°, anomalie recalculée sur la base 1991-2020) ; terre, NOAA CPC Global Daily Temperature (0,5°, moyenne de Tmax et Tmin, base 1991-2020). Agrégées à 1° pour l'affichage. Trait de côte Natural Earth. Indices et probabilités ENSO : NOAA CPC. Prévision mer : E.U. Copernicus Marine Service Information (GLO12). Prévision terres : ECMWF open data (CC BY 4.0). Prévisions calculées en ajoutant l'évolution prévue par le modèle à l'écart observé. Glace de mer : NSIDC Sea Ice Index v4 et OISST. Coraux : NOAA Coral Reef Watch. Derniers jours en statut préliminaire. Zones grises : pas de mesure (Antarctique, Groenland, trous de stations).
+<div class="brandfoot">Climate Observer · conçu par <a href="https://oceandataconsulting.fr" target="_blank" rel="noopener">OceanData Consulting</a> · données NOAA, NSIDC, Copernicus Marine, ECMWF</div></footer>
 <script>
 /*__DATA__*/
 
@@ -270,7 +292,7 @@ function drawMap(){
   drawSrc(off);
   drawCoastFlat(b,W,H);
   // graticule
-  ctx.strokeStyle='rgba(236,242,246,.12)'; ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
   for(let lat=-60;lat<=60;lat+=30){const y=lat2y(lat,b)*H; if(y<0||y>H)continue; ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
   if(marker){
     let lon=marker.lon; if(b[1]>180&&lon<0)lon+=360;
@@ -291,7 +313,7 @@ function drawGlobe(){
   if(gimg.w!==w||gimg.h!==h){gimg.w=w;gimg.h=h;gimg.data=ctx.createImageData(w,h);}
   const d=gimg.data.data, f=frameF(cur);
   const p0=globe.lat*Math.PI/180, l0=globe.lon*Math.PI/180, sp=Math.sin(p0), cp=Math.cos(p0);
-  const bg=[6,13,21];
+  const bg=[6,23,38];
   const doy=Math.round((Date.parse(META.dates[cur])-Date.parse(META.dates[cur].slice(0,4)+'-01-01'))/864e5)+1;
   const decl=-23.44*Math.PI/180*Math.cos(2*Math.PI*(doy+10)/365), sunLon=(-globe.lon*0.3+40)*Math.PI/180;
   const sx=Math.cos(decl)*Math.cos(sunLon), sy=Math.cos(decl)*Math.sin(sunLon), sz=Math.sin(decl);
@@ -471,14 +493,14 @@ function drawSpark(s){
   const c=spark,dpr=Math.min(window.devicePixelRatio||1,2),W=c.clientWidth,H=90; c.width=W*dpr;c.height=H*dpr; const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
   g.clearRect(0,0,W,H);
   const sv=s.filter(x=>!isNaN(x)); const mn=Math.min(0,...sv)-0.3, mx=Math.max(0,...sv)+0.3, y=v=>H-6-(v-mn)/(mx-mn)*(H-12), x=i=>4+i/(NT-1)*(W-8);
-  g.strokeStyle='rgba(142,164,182,.5)';g.lineWidth=1;g.beginPath();g.moveTo(0,y(0));g.lineTo(W,y(0));g.stroke();
+  g.strokeStyle='rgba(147,166,182,.5)';g.lineWidth=1;g.beginPath();g.moveTo(0,y(0));g.lineTo(W,y(0));g.stroke();
   // fill
   g.beginPath();g.moveTo(x(0),y(0));s.forEach((val,i)=>g.lineTo(x(i),y(isNaN(val)?0:val)));g.lineTo(x(NT-1),y(0));g.closePath();
   g.fillStyle='rgba(255,106,61,.18)';g.fill();
   const line=(i0,i1,dash)=>{g.setLineDash(dash);g.beginPath();let pen=false;for(let i=i0;i<=i1;i++){const val=s[i];if(isNaN(val)){pen=false;continue;} pen?g.lineTo(x(i),y(val)):g.moveTo(x(i),y(val));pen=true;}g.strokeStyle='#ff6a3d';g.lineWidth=2;g.stroke();g.setLineDash([]);};
-  line(0,TODAY,[]); if(NT>NOBS){ line(TODAY,NT-1,[4,4]); g.strokeStyle='rgba(236,242,246,.35)';g.lineWidth=1;g.beginPath();g.moveTo(x(TODAY),4);g.lineTo(x(TODAY),H-4);g.stroke(); }
+  line(0,TODAY,[]); if(NT>NOBS){ line(TODAY,NT-1,[4,4]); g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1;g.beginPath();g.moveTo(x(TODAY),4);g.lineTo(x(TODAY),H-4);g.stroke(); }
   if(!isNaN(s[cur])){g.beginPath();g.arc(x(cur),y(s[cur]),4,0,Math.PI*2);g.fillStyle='#fff';g.fill();}
-  g.fillStyle='#ecf2f6';g.font='600 12px Bricolage Grotesque, sans-serif';
+  g.fillStyle='#fff';g.font='600 12px "IBM Plex Mono",monospace';
   const lab=fmt(s[cur],1)+' °C'; g.fillText(lab, Math.min(x(cur)+8,W-50), Math.max(12,y(s[cur])-8));
 }
 
@@ -523,18 +545,18 @@ function cvs(id,h){const c=document.getElementById(id),dpr=Math.min(window.devic
 function drawN34(){
   const [g,W,H]=cvs('e34',200), L=36,Rr=8,T=10,Bt=26, n=N34.length;
   const t0=Date.parse(HD[0]), t1=Date.parse(HD[n-1]); const mn=Math.min(-1,...N34)-0.3, mx=Math.max(1,...N34)+0.3, y=v=>T+(mx-v)/(mx-mn)*(H-T-Bt), x=i=>L+(Date.parse(HD[i])-t0)/(t1-t0)*(W-L-Rr);
-  g.font='600 11px Bricolage Grotesque, sans-serif'; g.textBaseline='middle';
-  for(const v of [-2,-1,0,1,2,3]){ if(v<mn||v>mx)continue; g.strokeStyle=v===0?'rgba(236,242,246,.45)':'rgba(142,164,182,.18)'; g.beginPath();g.moveTo(L,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#8ea4b6'; g.textAlign='right'; g.fillText((v>0?'+':'')+v,L-6,y(v)); }
+  g.font='600 11px "IBM Plex Mono",monospace'; g.textBaseline='middle';
+  for(const v of [-2,-1,0,1,2,3]){ if(v<mn||v>mx)continue; g.strokeStyle=v===0?'rgba(255,255,255,.45)':'rgba(147,166,182,.18)'; g.beginPath();g.moveTo(L,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#93A6B6'; g.textAlign='right'; g.fillText((v>0?'+':'')+v,L-6,y(v)); }
   g.setLineDash([4,4]); g.strokeStyle='rgba(255,106,61,.6)'; g.beginPath();g.moveTo(L,y(0.5));g.lineTo(W-Rr,y(0.5));g.stroke(); g.strokeStyle='rgba(111,179,255,.6)'; g.beginPath();g.moveTo(L,y(-0.5));g.lineTo(W-Rr,y(-0.5));g.stroke(); g.setLineDash([]);
   g.fillStyle='#ff6a3d'; g.textAlign='left'; g.fillText('seuil El Niño',L+4,y(0.5)-8); g.fillStyle='#6fb3ff'; g.fillText('seuil La Niña',L+4,y(-0.5)+9);
   for(const [top,col] of [[true,'rgba(255,106,61,.22)'],[false,'rgba(111,179,255,.22)']]){ g.save(); g.beginPath(); g.rect(0,top?0:y(0),W,top?y(0):H); g.clip();
     g.beginPath(); g.moveTo(x(0),y(0)); N34.forEach((v,i)=>g.lineTo(x(i),y(v))); g.lineTo(x(n-1),y(0)); g.closePath(); g.fillStyle=col; g.fill(); g.restore(); }
   g.beginPath(); N34.forEach((v,i)=>i?g.lineTo(x(i),y(v)):g.moveTo(x(i),y(v))); g.strokeStyle='#ff6a3d'; g.lineWidth=2; g.stroke();
   g.beginPath();g.arc(x(n-1),y(N34[n-1]),4,0,Math.PI*2);g.fillStyle='#fff';g.fill();
-  g.fillStyle='#ecf2f6'; g.textAlign='right'; g.fillText(fmt(N34[n-1],1)+' °C', x(n-1)-8, y(N34[n-1])-12);
+  g.fillStyle='#fff'; g.textAlign='right'; g.fillText(fmt(N34[n-1],1)+' °C', x(n-1)-8, y(N34[n-1])-12);
   // months
-  g.fillStyle='#8ea4b6'; g.textAlign='center'; let lastM='';
-  HD.forEach((d,i)=>{const m=d.slice(0,7); if(m!==lastM&&d.slice(8,10)<='05'&&(+d.slice(5,7))%2===1){lastM=m; const lab=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'][+d.slice(5,7)-1]; g.fillText(lab,x(i),H-10); g.strokeStyle='rgba(142,164,182,.15)';g.beginPath();g.moveTo(x(i),T);g.lineTo(x(i),H-Bt);g.stroke();}});
+  g.fillStyle='#93A6B6'; g.textAlign='center'; let lastM='';
+  HD.forEach((d,i)=>{const m=d.slice(0,7); if(m!==lastM&&d.slice(8,10)<='05'&&(+d.slice(5,7))%2===1){lastM=m; const lab=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'][+d.slice(5,7)-1]; g.fillText(lab,x(i),H-10); g.strokeStyle='rgba(147,166,182,.15)';g.beginPath();g.moveTo(x(i),T);g.lineTo(x(i),H-Bt);g.stroke();}});
 }
 function drawHov(){
   const rows=ENSO.hov.rows, lons=ENSO.hov.lons, nt=rows.length, nl=lons.length;
@@ -546,24 +568,24 @@ function drawHov(){
   g.imageSmoothingEnabled=true;
   for(let t=0;t<nt;t++){ const tm=Date.parse(HD[t]); const ya=t?yt((tm+Date.parse(HD[t-1]))/2):T, yb=t<nt-1?yt((tm+Date.parse(HD[t+1]))/2):T+ph; g.drawImage(off2,0,t,nl,1,L,ya,pw,Math.max(1,yb-ya+0.6)); }
   const xl=lo=>L+(lo-lons[0])/(lons[nl-1]-lons[0])*pw;
-  g.font='600 11px Bricolage Grotesque, sans-serif'; g.fillStyle='#8ea4b6'; g.textAlign='center'; g.textBaseline='middle';
+  g.font='600 11px "IBM Plex Mono",monospace'; g.fillStyle='#93A6B6'; g.textAlign='center'; g.textBaseline='middle';
   g.textAlign='left'; g.fillText('← Indonésie',L,H-10); g.textAlign='center'; g.fillText('milieu du Pacifique',xl(200),H-10); g.textAlign='right'; g.fillText('Pérou →',W-Rr,H-10);
   g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=1.5; g.strokeRect(xl(190),T,xl(240)-xl(190),ph);
   g.textAlign='right'; let lastM='';
   HD.forEach((dd,t)=>{const m=dd.slice(0,7); if(m!==lastM&&(+dd.slice(5,7))%3===1&&dd.slice(8,10)<='05'){lastM=m; const yy=yt(Date.parse(dd)); g.fillText(MONTHS[+dd.slice(5,7)-1].slice(0,3)+' '+dd.slice(2,4), L-6, yy);}});
-  g.fillStyle='#ecf2f6'; g.textAlign='right'; g.fillText('aujourd\'hui', L-6, T+ph-4);
+  g.fillStyle='#fff'; g.textAlign='right'; g.fillText('aujourd\'hui', L-6, T+ph-4);
   const tl='thermomètre (Niño 3.4)', tw=g.measureText(tl).width; g.fillStyle='rgba(12,26,39,.85)'; g.fillRect(xl(190)+1,T+1,tw+10,20);
-  g.fillStyle='#ecf2f6'; g.textAlign='left'; g.fillText(tl, xl(190)+6, T+11);
+  g.fillStyle='#fff'; g.textAlign='left'; g.fillText(tl, xl(190)+6, T+11);
 }
 function drawOni(){
   const [g,W,H]=cvs('eoni_c',220), L=32,Rr=8,T=10,Bt=24, n=ONI.length, pw=W-L-Rr, ph=H-T-Bt;
   const mn=-2.6,mx=3.0, y=v=>T+(mx-v)/(mx-mn)*ph, x=i=>L+i/(n-1)*pw, bw=Math.max(1,pw/n);
-  g.font='600 11px Bricolage Grotesque, sans-serif'; g.textBaseline='middle';
-  for(const v of [-2,-1,0,1,2,3]){ g.strokeStyle=v===0?'rgba(236,242,246,.45)':'rgba(142,164,182,.15)'; g.beginPath();g.moveTo(L,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#8ea4b6';g.textAlign='right';g.fillText((v>0?'+':'')+v,L-5,y(v)); }
-  ONI.forEach((r,i)=>{const v=r[2]; g.fillStyle=v>=0.5?'#ff6a3d':v<=-0.5?'#6fb3ff':'rgba(142,164,182,.5)'; const yy=y(v),y0=y(0); g.fillRect(x(i),Math.min(yy,y0),bw+0.3,Math.abs(yy-y0));});
-  g.fillStyle='#8ea4b6'; g.textAlign='center';
+  g.font='600 11px "IBM Plex Mono",monospace'; g.textBaseline='middle';
+  for(const v of [-2,-1,0,1,2,3]){ g.strokeStyle=v===0?'rgba(255,255,255,.45)':'rgba(147,166,182,.15)'; g.beginPath();g.moveTo(L,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#93A6B6';g.textAlign='right';g.fillText((v>0?'+':'')+v,L-5,y(v)); }
+  ONI.forEach((r,i)=>{const v=r[2]; g.fillStyle=v>=0.5?'#ff6a3d':v<=-0.5?'#6fb3ff':'rgba(147,166,182,.5)'; const yy=y(v),y0=y(0); g.fillRect(x(i),Math.min(yy,y0),bw+0.3,Math.abs(yy-y0));});
+  g.fillStyle='#93A6B6'; g.textAlign='center';
   ONI.forEach((r,i)=>{ if(r[0]==='DJF'&&r[1]%10===0) g.fillText(r[1],x(i),H-9); });
-  g.fillStyle='#ecf2f6'; g.font='600 10px Bricolage Grotesque, sans-serif';
+  g.fillStyle='#fff'; g.font='600 10px "IBM Plex Mono",monospace';
   for(const [yr,lab] of [[1982,'82-83'],[1997,'97-98'],[2015,'15-16'],[2023,'23-24']]){ const i=ONI.findIndex(r=>r[1]===yr+1&&r[0]==='DJF'); if(i>0){const v=ONI[i][2]; g.fillText(lab,x(i),y(v)-9);} }
 }
 const IMPACTS={
@@ -596,8 +618,8 @@ const SEAS={DJF:'déc.-févr.',JFM:'janv.-mars',FMA:'févr.-avr.',MAM:'mars-mai'
 function setupProbs(){
   const P=ENSO.probs, box=document.getElementById('eprob'); if(!P||!P.length)return; box.hidden=false;
   const seg=(w,c)=>w?`<div style="width:${w}%;background:${c}"></div>`:'';
-  box.innerHTML=`<h2>Et dans les prochains mois ?</h2><p>Probabilités officielles de la NOAA pour chaque saison de trois mois : <span class="swatch" style="background:#6fb3ff"></span>La Niña <span class="swatch" style="background:#8ea4b6"></span>neutre <span class="swatch" style="background:#ff6a3d"></span>El Niño.</p>`+
-    P.map(([se,ln,ne,en])=>`<div class="prow"><span>${SEAS[se]||se}</span><div class="pbar" role="img" aria-label="${SEAS[se]||se} : El Niño ${en} %, neutre ${ne} %, La Niña ${ln} %">${seg(ln,'#6fb3ff')}${seg(ne,'#8ea4b6')}${seg(en,'#ff6a3d')}</div><span>${en} %</span></div>`).join('')+
+  box.innerHTML=`<h2>Et dans les prochains mois ?</h2><p>Probabilités officielles de la NOAA pour chaque saison de trois mois : <span class="swatch" style="background:#6fb3ff"></span>La Niña <span class="swatch" style="background:#93A6B6"></span>neutre <span class="swatch" style="background:#ff6a3d"></span>El Niño.</p>`+
+    P.map(([se,ln,ne,en])=>`<div class="prow"><span>${SEAS[se]||se}</span><div class="pbar" role="img" aria-label="${SEAS[se]||se} : El Niño ${en} %, neutre ${ne} %, La Niña ${ln} %">${seg(ln,'#6fb3ff')}${seg(ne,'#93A6B6')}${seg(en,'#ff6a3d')}</div><span>${en} %</span></div>`).join('')+
     `<p class="fine">Pourcentage à droite : probabilité d'El Niño. Source NOAA CPC, mise à jour vers le 10 de chaque mois, calculée sur l'indice relatif « RONI ».</p>`;
 }
 
@@ -628,7 +650,7 @@ function drawIce(id,pole){
   for(const line of COAST){ let pen=false; for(const [lo,la] of line){ if(north?la<39:la>-49){pen=false;continue;}
     const m=fwd(la,lo,p0,l0), x=R+m.x*k, y=R-m.y*k; pen?g.lineTo(x,y):g.moveTo(x,y); pen=true; } }
   g.stroke();
-  g.fillStyle='#ecf2f6'; g.font=`700 ${13*dpr}px Bricolage Grotesque, sans-serif`; g.textAlign='center'; g.fillText(north?'Arctique':'Antarctique',R,18*dpr);
+  g.fillStyle='#fff'; g.font=`700 ${13*dpr}px "IBM Plex Mono",monospace`; g.textAlign='center'; g.fillText(north?'Arctique':'Antarctique',R,18*dpr);
 }
 function setupSurv(){
   if(typeof SURV==='undefined')return; const box=document.getElementById('surv');
