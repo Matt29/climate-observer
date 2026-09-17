@@ -22,7 +22,7 @@ Built by [OceanData Consulting](https://oceandataconsulting.fr).
     uv venv -p 3.12 && uv pip install -r requirements.txt
     .venv/bin/python pipeline/build_data.py   # long the first time (~2.5 GB cache), a few minutes afterwards
     .venv/bin/python build_page.py
-    open dist/index.html
+    .venv/bin/python -m http.server 8765 -d dist   # then http://localhost:8765 (data.js is loaded from /, file:// does not work)
 
 The ocean forecast needs a free [Copernicus Marine](https://marine.copernicus.eu) account: either run
 `copernicusmarine login` once, or set `COPERNICUSMARINE_SERVICE_USERNAME` / `COPERNICUSMARINE_SERVICE_PASSWORD`.
