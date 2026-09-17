@@ -111,16 +111,29 @@ PAIRS_EN = [
 ]
 
 
-def build(lang):
+# Données dans dist/data.js, pas dans le HTML : LinkedIn refuse d'analyser une page de plus de 3 Mo (aperçu vide).
+# Même URL absolue /climate-observer/data.js sur GitHub Pages et via le proxy du site ; "/" en local.
+LOADER = ("<script>document.write('<script src=\"'+(/^\\/(en\\/)?climate-observer/.test(location.pathname)"
+          "?'/climate-observer/':'/')+'data.js?v=%s\"><\\/script>')</script>\n")
+
+
+def write_data():
     d = json.load(open(os.path.join(root, "data/build.json")))
     coast = open(os.path.join(root, "web/coast.min.json")).read()
-    block = (f"const LANG=\"{lang}\";\n"
-             f"const META={json.dumps(d['meta'])};\n"
-             f'const B64="{d["ocean_b64"]}";\n'
-             f"const COAST={coast};\n"
-             f"const ENSO={json.dumps(d['enso'])};\n"
-             f'const LB64="{d["land_b64"]}";\n'
-             f"const SURV={json.dumps(d.get('surv') or {})};\n")
+    js = (f"const META={json.dumps(d['meta'])};\n"
+          f'const B64="{d["ocean_b64"]}";\n'
+          f"const COAST={coast};\n"
+          f"const ENSO={json.dumps(d['enso'])};\n"
+          f'const LB64="{d["land_b64"]}";\n'
+          f"const SURV={json.dumps(d.get('surv') or {})};\n")
+    os.makedirs(os.path.join(root, "dist"), exist_ok=True)
+    open(os.path.join(root, "dist/data.js"), "w").write(js)
+    print("dist/data.js", round(len(js) / 1e6, 2), "Mo")
+    return d.get("built_at", "")[:19].replace(":", "")
+
+
+def build(lang, version):
+    block = f"const LANG=\"{lang}\";\n"
     tpl = open(os.path.join(root, "web/template.html")).read()
     assert "/*__DATA__*/" in tpl
     head, sep, rest = tpl.partition("<script>")
@@ -133,13 +146,14 @@ def build(lang):
     else:
         head = head.replace("<!--LANGSWITCH-->", LANGSWITCH_FR)
 
-    out = head + sep + rest.replace("/*__DATA__*/", block)
+    out = head + LOADER % version + sep + rest.replace("/*__DATA__*/", block)
     out_path = os.path.join(root, "dist/index.html" if lang == "fr" else "dist/en/index.html")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     open(out_path, "w").write(out)
-    print(out_path, round(len(out) / 1e6, 2), "Mo")
+    print(out_path, round(len(out) / 1e3), "ko")
 
 
-build("fr")
-build("en")
+version = write_data()
+build("fr", version)
+build("en", version)
 shutil.copyfile(os.path.join(root, "web/og.png"), os.path.join(root, "dist/og.png"))

@@ -12,7 +12,7 @@ Built by [OceanData Consulting](https://oceandataconsulting.fr).
 
     pipeline/build_data.py   downloads, computes, writes data/build.json (~7 MB)
     pipeline/surveillance.py sea ice (NSIDC), corals (CRW), ENSO probabilities (CPC); `python pipeline/surveillance.py` runs a self-check
-    build_page.py            injects the data into web/template.html -> dist/index.html
+    build_page.py            writes dist/data.js and dist/index.html + dist/en/index.html from web/template.html (HTML stays ~60 KB: LinkedIn skips pages over 3 MB)
     web/template.html        the whole UI (HTML/CSS/JS), no external library except Google Fonts
     web/coast.min.json       compacted Natural Earth 110m coastline ([lon, lat] polylines)
     .github/workflows/       daily cron + GitHub Pages deployment (data/build.json is not versioned, CI regenerates it)
