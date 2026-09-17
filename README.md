@@ -1,89 +1,101 @@
 # Climate Observer
 
-Page unique, sans dépendance, qui montre chaque jour l'écart à la normale des océans et des continents
-(globe tournant + vues plates + écart local au clic) et un tracker El Niño (Niño 3.4 du jour, 12 mois,
-Hovmöller équatorial, ONI depuis 1950).
+A daily, dependency-free web page showing how far today's ocean and land temperatures are from normal
+(spinning globe, flat maps, local anomaly on click), with a 9-day forecast, an El Niño tracker
+(today's Niño 3.4, last 12 months, equatorial Hovmöller, ONI since 1950) and ocean watch indicators
+(sea ice, coral bleaching alerts).
 
-Prototype validé en chat le 17/09/2026 sur les données du 17/08 au 15/09/2026.
+Live page: https://oceandataconsulting.fr/climate-observer, rebuilt every morning by GitHub Actions.
+Built by [OceanData Consulting](https://oceandataconsulting.fr).
 
-## Structure
+## Layout
 
-    pipeline/build_data.py   télécharge, calcule, écrit data/build.json (~5 Mo)
-    build_page.py            injecte les données dans web/template.html -> dist/index.html
-    pipeline/surveillance.py glace (NSIDC), coraux (CRW), probabilités ENSO (CPC) ; `python pipeline/surveillance.py` = self-check
-    web/template.html        toute l'UI (HTML/CSS/JS), zéro lib externe sauf Google Fonts
-    web/coast.min.json       trait de côte Natural Earth 110m compacté (polylignes [lon,lat])
-    .github/workflows/       cron quotidien + déploiement GitHub Pages (data/build.json n'est pas versionné, la CI le régénère)
+    pipeline/build_data.py   downloads, computes, writes data/build.json (~7 MB)
+    pipeline/surveillance.py sea ice (NSIDC), corals (CRW), ENSO probabilities (CPC); `python pipeline/surveillance.py` runs a self-check
+    build_page.py            injects the data into web/template.html -> dist/index.html
+    web/template.html        the whole UI (HTML/CSS/JS), no external library except Google Fonts
+    web/coast.min.json       compacted Natural Earth 110m coastline ([lon, lat] polylines)
+    .github/workflows/       daily cron + GitHub Pages deployment (data/build.json is not versioned, CI regenerates it)
 
-## Lancer
+## Run locally
 
-    pip install -r requirements.txt
-    python pipeline/build_data.py        # long la première fois (cache ~2,5 Go), ~1 min ensuite
-    python build_page.py
+    uv venv -p 3.12 && uv pip install -r requirements.txt
+    .venv/bin/python pipeline/build_data.py   # long the first time (~2.5 GB cache), a few minutes afterwards
+    .venv/bin/python build_page.py
     open dist/index.html
 
-## Ce que la page embarque
+The ocean forecast needs a free [Copernicus Marine](https://marine.copernicus.eu) account: either run
+`copernicusmarine login` once, or set `COPERNICUSMARINE_SERVICE_USERNAME` / `COPERNICUSMARINE_SERVICE_PASSWORD`.
+Without it the forecast is skipped and the page is still built.
 
-- `META` : dates (observées puis prévues), `nobs` (nombre de jours observés), `fc_land`, grille 1°,
-  séries à 1° (g60 = océan 60S-60N, gmean, frac_hot, lmean = terres)
-- `B64` : cube int8 (t, 180, 360) anomalie mer ×10, -128 = terre/absent, base64 ; les images ≥ `nobs` sont la prévision
-- `LB64` : idem pour la terre (CPC), -128 = océan ou pas de station
-- `COAST` : polylignes
-- `ENSO` : `hov` (dates, lons 120E-290E par 2°, rows, n34), `oni` [[saison, année, valeur]], `wk` [[date, N1+2, N3, N3.4, N4]], `probs` [[saison, La Niña, neutre, El Niño]]
-- `SURV` : `ice` (NSIDC nord/sud : extent, normal, rank_low, nyears, same_date{année}), `ice_maps` (calottes 0,5° uint8,
-  `now` et `ref` par année repère), `coral` (parts alert1/alert2/warning). Blocs absents = source en échec.
+## Embedded payload
 
-Le JS : décodage, dilatation de 4 passes des NaN côtiers pour un rendu lisse, LUT couleur −6/+6,
-rendu orthographique pixel par pixel (inverse orthographique, ombrage, terminateur, halo, étoiles,
-trait de côte projeté), vues plates avec repli au 180e, lookup du point le plus proche avec donnée,
-sparkline, onglets, graphes ENSO à axes temporels proportionnels (mélange 5 jours / quotidien).
+- `META`: dates (observed then forecast), `nobs` (number of observed days), `fc_land`, 1° grid,
+  1° series (`g60` = ocean 60S-60N, `gmean`, `frac_hot`, `lmean` = land)
+- `B64`: int8 cube (t, 180, 360) of sea anomaly ×10, -128 = land/missing, base64; frames ≥ `nobs` are the forecast
+- `LB64`: same for land (CPC), -128 = ocean or no station
+- `COAST`: polylines
+- `ENSO`: `hov` (dates, lons 120E-290E every 2°, rows, n34), `oni` [[season, year, value]], `wk` [[date, N1+2, N3, N3.4, N4]], `probs` [[season, La Niña, neutral, El Niño]]
+- `SURV`: `ice` (NSIDC north/south: extent, normal, rank_low, nyears, same_date{year}), `ice_maps` (0.5° uint8 polar caps,
+  `now` and `ref` per reference year), `coral` (alert1/alert2/warning shares). A missing block means that source failed.
+
+The JS decodes the cubes, dilates coastal NaNs over 4 passes for smooth rendering, applies a −6/+6 colour LUT,
+renders the orthographic globe pixel by pixel (inverse projection, shading, terminator, halo, stars, projected
+coastline), draws flat maps with dateline wrap, looks up the nearest cell with data, and plots the ENSO charts
+on proportional time axes (5-day / daily mix).
 
 ## Sources
 
-| Couche | Source | Latence | Base clim. |
+| Layer | Source | Latency | Baseline |
 |---|---|---|---|
-| Mer | NOAA OISST v2.1 daily, fichiers NCEI `avhrr/YYYYMM/` | J-1 prélim., J-14 final | 1991-2020 (`sst` − ltm PSL, recalculée) |
-| Terre | NOAA CPC Global Daily Temp Tmax/Tmin (PSL) | J-1 à J-2 | 1991-2020 (ltm PSL) |
-| ENSO hebdo | CPC `wksst9120.for` | lundi | 1991-2020 |
-| ONI | CPC `oni.ascii.txt` | ~10 du mois | glissante 30 ans |
-| Probabilités ENSO | CPC `enso/roni/probabilities/` (table HTML) | ~10 du mois | RONI |
-| Prévision mer 10 j | Copernicus Marine GLO12 `thetao` 0,49 m (compte requis) | J0 | écart ancré sur OISST 1991-2020 |
-| Prévision terres 9 j | ECMWF IFS open data `2t`, run 00 UTC du dernier jour observé | J0, rétention ~4 j | écart ancré sur CPC 1991-2020 |
-| Glace de mer | NSIDC Sea Ice Index v4 (chiffres) + champ `ice` OISST (carte) | J-1 | normale recalculée 1991-2020 (NSIDC livre 1981-2010) |
-| Coraux | NOAA Coral Reef Watch, ERDDAP `NOAA_DHW` `CRW_BAA_7D_MAX` (0,5°) | J-1 | alertes 0-4 |
+| Sea | NOAA OISST v2.1 daily, NCEI files `avhrr/YYYYMM/` | D-1 preliminary, D-14 final | 1991-2020 (`sst` − PSL ltm, recomputed) |
+| Land | NOAA CPC Global Daily Temperature Tmax/Tmin (PSL) | D-1 to D-2 | 1991-2020 (PSL ltm) |
+| Weekly ENSO | CPC `wksst9120.for` | Mondays | 1991-2020 |
+| ONI | CPC `oni.ascii.txt` | ~10th of the month | rolling 30 years |
+| ENSO probabilities | CPC `enso/roni/probabilities/` (HTML table) | ~10th of the month | RONI |
+| Sea forecast | Copernicus Marine GLO12 `thetao` 0.49 m (account required) | D0 | anomaly anchored on OISST 1991-2020 |
+| Land forecast | ECMWF IFS open data `2t`, 00 UTC run of the last observed day | D0, ~4-day retention | anomaly anchored on CPC 1991-2020 |
+| Sea ice | NSIDC Sea Ice Index v4 (figures) + OISST `ice` field (map) | D-1 | normal recomputed on 1991-2020 (NSIDC ships 1981-2010) |
+| Corals | NOAA Coral Reef Watch, ERDDAP `NOAA_DHW` `CRW_BAA_7D_MAX` (0.5°) | D-1 | alert levels 0-4 |
 
-## Pièges connus (déjà rencontrés)
+Each dataset remains subject to its provider's terms of use.
 
-1. **NCSS PSL corrompt les fichiers Tmin** (une ligne de latitude sur deux à 0), et PSL coupe les transferts
-   tous les ~10 Mo, ce qu'une réponse NCSS générée à la volée ne sait pas reprendre (tmax bloqué à 12 Mo le 17/09).
-   Le script télécharge donc `tmax|tmin.YYYY.nc` et `tmax|tmin.day.ltm.1991-2020.nc` en entier via `fileServer`.
-   `get()` écrit dans `.part`, reprend avec `curl -C -` tant que le fichier grossit, et ne renomme qu'au succès
-   de curl : un fichier en cache est toujours complet.
-2. **Bases climatologiques différentes** : le champ `anom` des fichiers OISST est sur 1971-2000. Corrigé : l'anomalie
-   mer est recalculée `sst − sst.day.mean.ltm.1991-2020.nc` (PSL, 0,25°, 1,4 Go en cache), même base que la terre,
-   les indices hebdo et l'ONI. Le 29/02 prend la clim du 28/02 (clim de 365 j). Effet mesuré le 15/09/2026 : −0,09 °C sur
-   60S-60N (−0,3 à −0,6 °C vers 30-70°N, ~0 dans l'océan Austral), −0,02 °C sur Niño 3.4. Premier téléchargement long (~140 reprises, cf. 1) ;
-   un fichier tronqué donne `NetCDF: HDF error` à l'ouverture.
-3. Le calendrier des fichiers ltm est `gregorian` année 1 : passer par `cftime.num2date`, pas par datetime.
-4. CPC est un produit stations : trous (Antarctique, Groenland, Sahara, Amazonie) et quelques cellules
-   aberrantes (jusqu'à −50 °C). Pour une couverture complète : ERA5 (CDS, J-5) ou analyse GFS 00Z.
-5. **Prévisions = méthode des écarts** : `anomalie(d) = anomalie observée(J0) + [modèle(d) − modèle(J0)] − [clim(d) − clim(J0)]`.
-   Soustraire la climatologie OISST/CPC au champ brut du modèle ferait une marche à la frontière (biais modèle).
-   Vérifié le 15/09 : pas de saut (écart jour à jour médian 0,1 °C mer, ~1 °C terre, identique des deux côtés).
-   IFS open data s'arrête à 240 h : la prévision est limitée aux jours communs mer et terre (9 j).
-   Les séries (`g60`, `frac_hot`, `lmean`) sont calculées à 1° sur tout le cube pour la même raison (au 15/09 la moyenne 60S-60N reste 0,80 °C).
-   Chaque source optionnelle (prévisions, NSIDC, CRW, probabilités) échoue en mode dégradé : bloc omis, build maintenu.
-6. **Glace** : avant 1987 NSIDC n'a qu'une valeur tous les 2 jours, l'année repère prend le jour voisin (±1).
-   2020 (2ᵉ plus faible Arctique) donne « plus de glace qu'en 2020 » : 1982 par défaut, et la carte colore glace perdue ET gagnée. Coraux : `NOAA_DHW` n'a pas de masque
-   récifs, on affiche la part de l'océan tropical en alerte, pas « des récifs ».
-7. Un artifact Claude publié ne peut pas fetcher : la page doit être régénérée et hébergée (Pages/Vercel/R2).
-8. **CI** : seules les 3 climatologies 1991-2020 (~1,8 Go, immuables) sont en cache Actions, clé fixe `ltm-1991-2020-v1`
-   (sauvée une fois, uniquement si le job réussit) ; le reste (~250 Mo) est retéléchargé chaque jour. Changer de base = changer la clé.
-   Secrets requis : `COPERNICUSMARINE_SERVICE_USERNAME` / `_PASSWORD` (sinon prévision mer absente, build maintenu).
-   GitHub désactive un cron après 60 jours sans activité sur le dépôt : le réactiver dans l'onglet Actions si la page se fige.
+## Known pitfalls
+
+1. **PSL NCSS corrupts Tmin files** (every other latitude row set to 0), and PSL drops transfers every ~10 MB,
+   which an on-the-fly NCSS response cannot resume. The pipeline therefore downloads whole `tmax|tmin.YYYY.nc` and
+   `tmax|tmin.day.ltm.1991-2020.nc` files through `fileServer`. `get()` writes to `.part`, resumes with `curl -C -`
+   as long as the file grows, and renames only when curl succeeds: a cached file is always complete.
+2. **Mismatched climatologies**: the `anom` field of OISST files uses 1971-2000. The sea anomaly is recomputed as
+   `sst − sst.day.mean.ltm.1991-2020.nc` (PSL, 0.25°, 1.4 GB), the same baseline as land, the weekly indices and ONI.
+   Feb 29 uses the Feb 28 climatology (365-day climatology). Measured effect on 2026-09-15: −0.09 °C over 60S-60N
+   (−0.3 to −0.6 °C around 30-70°N, ~0 in the Southern Ocean), −0.02 °C on Niño 3.4. A truncated file raises
+   `NetCDF: HDF error` on open.
+3. The ltm files use a `gregorian` calendar starting in year 1: go through `cftime.num2date`, not datetime.
+4. CPC is a station product: gaps (Antarctica, Greenland, Sahara, Amazon) and a few outlier cells (down to −50 °C).
+   For full coverage, use ERA5 (CDS, D-5) or the GFS 00Z analysis.
+5. **Forecasts use the delta method**: `anomaly(d) = observed anomaly(D0) + [model(d) − model(D0)] − [clim(d) − clim(D0)]`.
+   Subtracting the OISST/CPC climatology from the raw model field would create a step at the boundary (model bias).
+   Checked on 2026-09-15: no jump (median day-to-day change 0.1 °C at sea, ~1 °C on land, same on both sides).
+   IFS open data stops at 240 h, so the forecast is limited to the days covered by both sea and land (9 days).
+   Series (`g60`, `frac_hot`, `lmean`) are computed at 1° over the whole cube for the same reason.
+   Every optional source (forecasts, NSIDC, CRW, probabilities) fails gracefully: its block is omitted, the build goes on.
+6. **Sea ice**: before 1987 NSIDC only has one value every 2 days, so reference years use the neighbouring day (±1).
+   2020 (2nd-lowest Arctic year) would show "more ice than in 2020", hence 1982 as the default, and the map shows
+   both lost and gained ice. **Corals**: `NOAA_DHW` has no reef mask, so the page shows the share of the tropical
+   ocean under alert, not "of reefs".
+7. **CI cache**: only the three 1991-2020 climatologies (~1.8 GB, immutable) are cached, under the fixed key
+   `ltm-1991-2020-v1` (saved once, only when the job succeeds); the rest (~250 MB) is downloaded again every day.
+   Changing the baseline means changing the key. Required secrets: `COPERNICUSMARINE_SERVICE_USERNAME` /
+   `COPERNICUSMARINE_SERVICE_PASSWORD`. GitHub disables a scheduled workflow after 60 days without repository
+   activity: re-enable it in the Actions tab if the page stops updating.
 
 ## Roadmap
 
-- Servir le 0,25° en tuiles (COG/PMTiles) plutôt qu'embarquer le 1° ; petit Zarr pour le clic.
-- Rendu vidéo quotidien du globe (matplotlib/cartopy ou Playwright + ffmpeg) pour TikTok.
-- SOI, sous-surface TAO/TRITON, vagues de chaleur marines (catégories Hobday, percentile 90 à calculer).
+- Serve the 0.25° field as tiles (COG/PMTiles) instead of embedding the 1° grid; small Zarr for click lookups.
+- Daily video render of the globe.
+- SOI, TAO/TRITON subsurface, marine heatwaves (Hobday categories, 90th percentile to compute).
+
+## License
+
+Code released under the [MIT License](LICENSE). The data belongs to its providers (NOAA, NSIDC, Copernicus Marine, ECMWF) and follows their own terms.
