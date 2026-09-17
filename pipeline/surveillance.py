@@ -17,7 +17,7 @@ CPC_PROBS = "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/ron
 
 
 def fetch(url, timeout=300):
-    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "fievre-ocean"}), timeout=timeout).read()
+    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "climate-observer"}), timeout=timeout).read()
 
 
 def sea_ice_from_csv(text):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fièvre océan, pipeline quotidien.
+Climate Observer, pipeline quotidien.
 
 Produit data/build.json (tout ce que la page embarque) à partir de :
   - NOAA OISST v2.1 daily (mer, 0,25°) : 30 derniers jours + 12 mois à pas de 5 jours (ENSO)
