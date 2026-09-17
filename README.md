@@ -13,7 +13,7 @@ Prototype validé en chat le 17/09/2026 sur les données du 17/08 au 15/09/2026.
     pipeline/surveillance.py glace (NSIDC), coraux (CRW), probabilités ENSO (CPC) ; `python pipeline/surveillance.py` = self-check
     web/template.html        toute l'UI (HTML/CSS/JS), zéro lib externe sauf Google Fonts
     web/coast.min.json       trait de côte Natural Earth 110m compacté (polylignes [lon,lat])
-    .github/workflows/       cron quotidien + déploiement GitHub Pages (à adapter Vercel/R2)
+    .github/workflows/       cron quotidien + déploiement GitHub Pages (data/build.json n'est pas versionné, la CI le régénère)
 
 ## Lancer
 
@@ -77,10 +77,13 @@ sparkline, onglets, graphes ENSO à axes temporels proportionnels (mélange 5 jo
    2020 (2ᵉ plus faible Arctique) donne « plus de glace qu'en 2020 » : 1982 par défaut, et la carte colore glace perdue ET gagnée. Coraux : `NOAA_DHW` n'a pas de masque
    récifs, on affiche la part de l'océan tropical en alerte, pas « des récifs ».
 7. Un artifact Claude publié ne peut pas fetcher : la page doit être régénérée et hébergée (Pages/Vercel/R2).
+8. **CI** : seules les 3 climatologies 1991-2020 (~1,8 Go, immuables) sont en cache Actions, clé fixe `ltm-1991-2020-v1`
+   (sauvée une fois, uniquement si le job réussit) ; le reste (~250 Mo) est retéléchargé chaque jour. Changer de base = changer la clé.
+   Secrets requis : `COPERNICUSMARINE_SERVICE_USERNAME` / `_PASSWORD` (sinon prévision mer absente, build maintenu).
+   GitHub désactive un cron après 60 jours sans activité sur le dépôt : le réactiver dans l'onglet Actions si la page se fige.
 
 ## Roadmap
 
 - Servir le 0,25° en tuiles (COG/PMTiles) plutôt qu'embarquer le 1° ; petit Zarr pour le clic.
 - Rendu vidéo quotidien du globe (matplotlib/cartopy ou Playwright + ffmpeg) pour TikTok.
 - SOI, sous-surface TAO/TRITON, vagues de chaleur marines (catégories Hobday, percentile 90 à calculer).
-- `data/build.json` (~7,6 Mo) est versionné et régénéré chaque jour : à sortir de git si l'historique gonfle.

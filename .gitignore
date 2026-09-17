@@ -7,3 +7,4 @@ cache/
 dist/
 *.part
 data/build_*.json
+data/build.json

@@ -3,6 +3,7 @@ on:
   schedule:
     - cron: "30 6 * * *"   # 06:30 UTC, après la mise à jour OISST/CPC
   workflow_dispatch:
+concurrency: daily-build
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,16 +12,17 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -r requirements.txt
-      - uses: actions/cache@v4
+      - uses: actions/cache@v4   # climatologies 1991-2020 (~1,8 Go, immuables) : clé fixe, sauvées une fois ; le reste (~250 Mo/j) est retéléchargé
         with:
-          path: cache
-          key: data-cache-${{ github.run_id }}
-          restore-keys: data-cache-
+          path: |
+            cache/oisst/sst.day.mean.ltm.1991-2020.nc
+            cache/cpc/tmax.day.ltm.1991-2020.nc
+            cache/cpc/tmin.day.ltm.1991-2020.nc
+          key: ltm-1991-2020-v1
       - run: python pipeline/build_data.py
         env:
           COPERNICUSMARINE_SERVICE_USERNAME: ${{ secrets.COPERNICUSMARINE_SERVICE_USERNAME }}
           COPERNICUSMARINE_SERVICE_PASSWORD: ${{ secrets.COPERNICUSMARINE_SERVICE_PASSWORD }}
-      - run: find cache/ecmwf cache/glo12 cache/oisst_ref -type f -mtime +2 -delete 2>/dev/null || true   # périmés ; dossiers absents si une source a échoué
       - run: python build_page.py
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
