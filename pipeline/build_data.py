@@ -192,8 +192,17 @@ def land_forecast(anom05, clim05, t0, cache, days):
     if not os.path.exists(path):
         from ecmwf.opendata import Client
         os.makedirs(cache, exist_ok=True)
-        Client(source="ecmwf").retrieve(date=t0.isoformat(), time=0, type="fc", param="2t",
-                                        step=list(range(0, 24 * days, 6)), target=path + ".part")
+        # data.ecmwf.int répond 429 aux IP partagées de GitHub Actions (et le miroir AWS 503) ; multiurl réessaie
+        # 500 × 120 s par défaut : miroirs Google/Azure d'abord, retries bornés
+        for src in ("google", "azure", "ecmwf"):
+            try:
+                Client(source=src, maximum_retries=2, retry_after=30).retrieve(
+                    date=t0.isoformat(), time=0, type="fc", param="2t", step=list(range(0, 24 * days, 6)), target=path + ".part")
+                break
+            except Exception as e:
+                print(f"ECMWF open data ({src}) : {type(e).__name__}: {e}")
+        else:
+            raise RuntimeError("ECMWF open data indisponible (google, azure, ecmwf)")
         os.replace(path + ".part", path)
     t2 = xr.open_dataset(path, engine="cfgrib", indexpath="").t2m.sortby("latitude")
     # la grille 0,25° d'IFS contient exactement les centres 0,5° de CPC : sélection, pas d'interpolation (ni scipy)

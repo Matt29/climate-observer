@@ -5,11 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Climate Observer, l'écart à la normale, jour après jour</title>
 <link rel="canonical" href="https://oceandataconsulting.fr/climate-observer">
+<link rel="alternate" hreflang="fr" href="https://oceandataconsulting.fr/climate-observer">
+<link rel="alternate" hreflang="en" href="https://oceandataconsulting.fr/en/climate-observer">
+<link rel="alternate" hreflang="x-default" href="https://oceandataconsulting.fr/climate-observer">
 <meta name="description" content="Écart à la normale des océans et des continents, mis à jour chaque jour : globe, prévision 9 jours, El Niño, glace de mer, coraux.">
 <meta property="og:title" content="Climate Observer">
 <meta property="og:description" content="Écart à la normale des océans et des continents, mis à jour chaque jour : globe, prévision 9 jours, El Niño, glace de mer, coraux.">
 <meta property="og:url" content="https://oceandataconsulting.fr/climate-observer">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://oceandataconsulting.fr/climate-observer/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="Carte mondiale de l'écart de température à la normale, Climate Observer">
+<meta property="og:site_name" content="OceanData Consulting">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -29,6 +39,11 @@ body{max-width:1100px;margin:0 auto;padding:0 0 60px}
 .brandbar-contact{font-family:"IBM Plex Sans",sans-serif;font-size:13px;font-weight:500;color:var(--accent);text-decoration:none}
 .brandbar-name:hover,.brandbar-contact:hover{text-decoration:underline}
 .brandbar-name:focus-visible,.brandbar-contact:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.brandbar-right{display:flex;align-items:center;gap:14px}
+.langswitch{font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;font-size:12px;color:var(--mute);letter-spacing:.02em}
+.langswitch a{color:var(--mute);text-decoration:none}
+.langswitch a:hover,.langswitch a:focus-visible{color:var(--ink);text-decoration:underline}
+.langswitch b{color:var(--ink)}
 header{padding:22px 18px 6px}
 .kicker{color:var(--accent);font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;font-size:12px;font-weight:500;letter-spacing:.12em;text-transform:uppercase}
 h1{margin:6px 0 0;font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:clamp(34px,7.5vw,68px);line-height:.98;font-weight:700;letter-spacing:-.02em}
@@ -55,7 +70,7 @@ canvas#map{display:block;width:100%;height:auto;cursor:crosshair;touch-action:no
 .local p{margin:8px 0 0;color:var(--mute);font-size:15px;line-height:1.45}
 .local .big{font-family:"Space Grotesk","Segoe UI",system-ui,sans-serif;font-size:clamp(44px,12vw,84px);font-weight:800;line-height:1;margin:14px 0 4px;letter-spacing:-.03em;color:var(--hot)}
 .local .big.neg{color:var(--cold)}
-.local .big small{font-size:.35em;font-weight:600;color:var(--mute);letter-spacing:0;margin-left:6px}
+.local .big small{font-size:max(.35em,14px);font-weight:600;color:var(--mute);letter-spacing:0;margin-left:6px}
 .local .where{color:var(--ink);font-family:"IBM Plex Mono","SFMono-Regular",ui-monospace,monospace;font-weight:600}
 .local .tag{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;background:#2b1a16;color:#ffb39f}
 .local .tag.cool{background:#12283a;color:#9ccbff}.local .tag.ok{background:#1a2c2a;color:#9fe0c8}
@@ -74,7 +89,7 @@ footer a{color:var(--ink)}
 .brandfoot a{color:var(--accent);text-decoration:none}
 .brandfoot a:hover,.brandfoot a:focus-visible{text-decoration:underline}
 .brandfoot a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.next{margin:22px 18px 0;padding:14px 16px;border-left:3px solid var(--accent);color:var(--mute);font-size:14px;line-height:1.5}
+.next{margin:22px 18px 0;padding:14px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;color:var(--mute);font-size:14px;line-height:1.5}
 .next b{color:var(--ink)}
 .local ul{margin:10px 0 0;padding-left:18px;color:var(--mute);font-size:15px;line-height:1.5}
 .local li{margin:6px 0}.local li b{color:var(--ink)}
@@ -95,7 +110,7 @@ footer a{color:var(--ink)}
 <body>
 <div class="brandbar">
   <a class="brandbar-name" href="https://oceandataconsulting.fr" target="_blank" rel="noopener"><span class="brandbar-dot"></span>OceanData Consulting</a>
-  <a class="brandbar-contact" href="https://oceandataconsulting.fr/#contact" target="_blank" rel="noopener">Contact</a>
+  <div class="brandbar-right"><!--LANGSWITCH--><a class="brandbar-contact" href="https://oceandataconsulting.fr/#contact" target="_blank" rel="noopener">Contact</a></div>
 </div>
 <nav class="tabs" aria-label="Sections"><button data-tab="globe" aria-pressed="true">Le globe</button><button data-tab="enso" aria-pressed="false">El Niño en direct</button></nav>
 <section id="tab-globe">
@@ -249,12 +264,12 @@ for(let i=0;i<NLAT;i++)for(let j=0;j<NLON;j++){const row=NLAT-1-i,o=(row*NLON+j)
 
 // ---------- map rendering ----------
 const REGIONS=[
-  {n:"Globe",globe:true},
-  {n:"Monde",b:[-180,180,-80,85]},
-  {n:"Atlantique NE",b:[-35,20,28,68]},
-  {n:"Méditerranée",b:[-7,37,29,47]},
-  {n:"Antilles",b:[-92,-52,6,30]},
-  {n:"Pacifique",b:[100,290,-40,60]},
+  {n:"Globe",en:"Globe",globe:true},
+  {n:"Monde",en:"World",b:[-180,180,-80,85]},
+  {n:"Atlantique NE",en:"NE Atlantic",b:[-35,20,28,68]},
+  {n:"Méditerranée",en:"Mediterranean",b:[-7,37,29,47]},
+  {n:"Antilles",en:"Caribbean",b:[-92,-52,6,30]},
+  {n:"Pacifique",en:"Pacific",b:[100,290,-40,60]},
 ];
 let region=REGIONS[0], cur=TODAY, marker=null;
 const globe={lon:-20,lat:25,spin:!matchMedia('(prefers-reduced-motion: reduce)').matches,dragging:false};
@@ -403,39 +418,40 @@ function drawCoastGlobe(cx,cy,R,p0,l0){
   ctx.stroke();
 }
 // ---------- header stats ----------
-const fmt=(x,d=2)=>(x>=0?'+':'−')+Math.abs(x).toFixed(d).replace('.',',');
-const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const L=(fr,en)=>LANG==='en'?en:fr;
+const fmt=(x,d=2)=>(x>=0?'+':'−')+Math.abs(x).toFixed(d).replace('.',L(',','.'));
+const MONTHS=LANG==='en'?['January','February','March','April','May','June','July','August','September','October','November','December']:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 const fdate=s=>{const[y,m,d]=s.split('-');return `${+d} ${MONTHS[+m-1]} ${y}`;};
 function updateHeader(){
   const g=META.g60[cur], el=document.getElementById('gnum');
   el.textContent=fmt(g)+' °C'; el.classList.toggle('neg',g<0);
-  document.getElementById('headline').firstChild.textContent=cur>TODAY?`Prévu pour le ${fdate(META.dates[cur])}, l'océan sera à `:(cur===TODAY?"Aujourd'hui":"Le "+fdate(META.dates[cur]))+", l'océan est à ";
+  document.getElementById('headline').firstChild.textContent=cur>TODAY?L(`Prévu pour le ${fdate(META.dates[cur])}, l'océan sera à `,`Forecast for ${fdate(META.dates[cur])}, the ocean will be `):(cur===TODAY?L("Aujourd'hui","Today"):L("Le ","On ")+fdate(META.dates[cur]))+L(", l'océan est à ",", the ocean is ");
   document.getElementById('fracHot').textContent=Math.round(META.frac_hot[cur]*100)+' %';
-  const lm=META.lmean[cur]; document.getElementById('landMean').textContent=lm==null?'n/d':fmt(lm,1)+' °C';
-  document.getElementById('lmeanTxt').textContent=lm==null?'les terres (pas de mesure ce jour)':'les terres sont à '+fmt(lm,1)+' °C';
+  const lm=META.lmean[cur]; document.getElementById('landMean').textContent=lm==null?L('n/d','n/a'):fmt(lm,1)+' °C';
+  document.getElementById('lmeanTxt').textContent=lm==null?L('les terres (pas de mesure ce jour)','no land data today'):L('les terres sont à ','land is at ')+fmt(lm,1)+' °C';
   document.getElementById('trend30').textContent=fmt(META.g60[cur]-META.g60[Math.max(0,cur-29)])+' °C';
-  document.getElementById('dateLab').textContent=fdate(META.dates[cur]).replace(/ \d{4}$/,'')+(cur>TODAY?' · prévision':'');
+  document.getElementById('dateLab').textContent=fdate(META.dates[cur]).replace(/ \d{4}$/,'')+(cur>TODAY?L(' · prévision',' · forecast'):'');
 }
 
 // ---------- timeline ----------
 const slider=document.getElementById('slider'), playBtn=document.getElementById('play');
 slider.max=NT-1; slider.value=TODAY;
-if(NT>NOBS) document.getElementById('fcnote').textContent=`Après le ${fdate(META.dates[TODAY]).replace(/ \d{4}$/,'')}, le curseur montre une prévision jusqu'au ${fdate(META.dates[NT-1]).replace(/ \d{4}$/,'')} (mer : Copernicus Marine${META.fc_land?', terres : ECMWF':', pas de prévision sur les terres'}).`;
+if(NT>NOBS) document.getElementById('fcnote').textContent=L(`Après le ${fdate(META.dates[TODAY]).replace(/ \d{4}$/,'')}, le curseur montre une prévision jusqu'au ${fdate(META.dates[NT-1]).replace(/ \d{4}$/,'')} (mer : Copernicus Marine${META.fc_land?', terres : ECMWF':', pas de prévision sur les terres'}).`,`After ${fdate(META.dates[TODAY]).replace(/ \d{4}$/,'')}, the slider shows a forecast through ${fdate(META.dates[NT-1]).replace(/ \d{4}$/,'')} (ocean: Copernicus Marine${META.fc_land?', land: ECMWF':', no land forecast'}).`);
 let timer=null;
 function setDay(t){cur=t; slider.value=t; updateHeader(); drawMap(); if(marker)showLocal(marker.lat,marker.lon,false);}
 slider.addEventListener('input',e=>setDay(+e.target.value));
-function play(){ if(timer){clearInterval(timer);timer=null;playBtn.textContent='▶';playBtn.setAttribute('aria-label','Lancer l\'animation');return;}
-  playBtn.textContent='❚❚'; playBtn.setAttribute('aria-label','Mettre en pause');
+function play(){ if(timer){clearInterval(timer);timer=null;playBtn.textContent='▶';playBtn.setAttribute('aria-label',L('Lancer l\'animation','Play animation'));return;}
+  playBtn.textContent='❚❚'; playBtn.setAttribute('aria-label',L('Mettre en pause','Pause'));
   if(cur===NT-1)cur=-1;
   timer=setInterval(()=>{ if(cur>=NT-1){clearInterval(timer);timer=null;playBtn.textContent='▶';return;} setDay(cur+1); }, 220);
 }
 playBtn.addEventListener('click',play);
-const spinBtn=document.getElementById('spin'); const spinLab=()=>{spinBtn.textContent=globe.spin?'⟳':'⊙';spinBtn.setAttribute('aria-label',globe.spin?'Arrêter la rotation':'Relancer la rotation');};
+const spinBtn=document.getElementById('spin'); const spinLab=()=>{spinBtn.textContent=globe.spin?'⟳':'⊙';spinBtn.setAttribute('aria-label',globe.spin?L('Arrêter la rotation','Stop rotation'):L('Relancer la rotation','Resume rotation'));};
 spinBtn.addEventListener('click',()=>{globe.spin=!globe.spin;spinLab();}); spinLab();
 
 // ---------- regions ----------
 const rb=document.getElementById('regions');
-REGIONS.forEach((r,k)=>{const b=document.createElement('button');b.textContent=r.n;b.setAttribute('aria-pressed',k===0);
+REGIONS.forEach((r,k)=>{const b=document.createElement('button');b.textContent=L(r.n,r.en);b.setAttribute('aria-pressed',k===0);
   b.onclick=()=>{region=r;[...rb.children].forEach((c,i)=>c.setAttribute('aria-pressed',i===k));drawMap();};rb.appendChild(b);});
 
 // ---------- local lookup ----------
@@ -465,27 +481,30 @@ const spark=document.getElementById('spark');
 function showLocal(lat,lon,scroll=true){
   const p=nearestData(lat,lon);
   const res=document.getElementById('lresult'), help=document.getElementById('lhelp');
-  if(!p){res.hidden=true;help.textContent="Pas de mesure ici (zone grise). Essayez un point voisin.";return;}
+  if(!p){res.hidden=true;help.textContent=L("Pas de mesure ici (zone grise). Essayez un point voisin.","No data here (grey zone). Try a nearby point.");return;}
   marker={lat,lon}; drawMap();
   const series=[]; for(let t=0;t<NT;t++)series.push(cellVal(t,p.i,p.j)); const a=series[cur];
-  if(isNaN(a)){res.hidden=true;help.textContent="Pas de mesure ce jour-là à cet endroit.";return;}
+  if(isNaN(a)){res.hidden=true;help.textContent=L("Pas de mesure ce jour-là à cet endroit.","No data for that day at this location.");return;}
   res.hidden=false;
-  help.textContent=(p.land?"Sur terre":"En mer")+(p.snapped?", point mesuré le plus proche de l'endroit choisi.":".");
+  help.textContent=L(p.land?"Sur terre":"En mer",p.land?"On land":"At sea")+(p.snapped?L(", point mesuré le plus proche de l'endroit choisi.",", nearest measured point to the location you picked."):".");
   const big=document.getElementById('lbig'); big.innerHTML=fmt(a,1)+'<small>°C</small>'; big.classList.toggle('neg',a<0);
-  const plat=Math.abs(lat).toFixed(1).replace('.',',')+'°'+(lat>=0?'N':'S'), plon=Math.abs(lon).toFixed(1).replace('.',',')+'°'+(lon>=0?'E':'O');
+  const plat=Math.abs(lat).toFixed(1).replace('.',L(',','.'))+'°'+(lat>=0?'N':'S'), plon=Math.abs(lon).toFixed(1).replace('.',L(',','.'))+'°'+(lon>=0?'E':L('O','W'));
   document.getElementById('lwhere').textContent=`${plat} ${plon} :`;
-  const fc=cur>TODAY, verb=fc?(p.land?"il devrait faire":"l'eau devrait être"):(p.land?"il fait":"l'eau est");
-  const warm=a>=0, adj=p.land?(warm?"chaud":"froid"):(warm?"chaude":"froide");
-  document.getElementById('ltext').textContent=`${verb} ${Math.abs(a).toFixed(1).replace('.',',')} °C plus ${adj} que la normale d'un ${fdate(META.dates[cur]).replace(/ \d{4}$/,'')}${cur===TODAY?" (aujourd'hui)":fc?" (prévision)":""}.`;
+  const fc=cur>TODAY, verb=L(fc?(p.land?"il devrait faire":"l'eau devrait être"):(p.land?"il fait":"l'eau est"),fc?(p.land?"it should be":"the water should be"):(p.land?"it is":"the water is"));
+  const warm=a>=0, adj=L(p.land?(warm?"chaud":"froid"):(warm?"chaude":"froide"),warm?"warmer":"colder");
+  document.getElementById('ltext').textContent=L(
+    `${verb} ${Math.abs(a).toFixed(1).replace('.',',')} °C plus ${adj} que la normale d'un ${fdate(META.dates[cur]).replace(/ \d{4}$/,'')}${cur===TODAY?" (aujourd'hui)":fc?" (prévision)":""}.`,
+    `${verb} ${Math.abs(a).toFixed(1).replace('.','.')}°C ${adj} than the average for ${fdate(META.dates[cur]).replace(/ \d{4}$/,'')}${cur===TODAY?" (today)":fc?" (forecast)":""}.`
+  );
   const tag=document.getElementById('ltag'); tag.className='tag';
-  if(a<-0.5){tag.textContent='Plus froid que d\'habitude';tag.classList.add('cool');}
-  else if(a<0.5){tag.textContent='Dans la normale';tag.classList.add('ok');}
-  else if(a<1.5)tag.textContent='Plus chaud que la normale';
-  else if(a<3)tag.textContent='Nettement plus chaud';
-  else tag.textContent='Anomalie extrême';
+  if(a<-0.5){tag.textContent=L('Plus froid que d\'habitude','Colder than usual');tag.classList.add('cool');}
+  else if(a<0.5){tag.textContent=L('Dans la normale','Near normal');tag.classList.add('ok');}
+  else if(a<1.5)tag.textContent=L('Plus chaud que la normale','Warmer than normal');
+  else if(a<3)tag.textContent=L('Nettement plus chaud','Much warmer');
+  else tag.textContent=L('Anomalie extrême','Extreme anomaly');
   document.getElementById('sd0').textContent=fdate(META.dates[0]).replace(' 2026','');
   document.getElementById('sd1').textContent=fdate(META.dates[NT-1]).replace(/ \d{4}$/,'');
-  document.getElementById('sdmid').textContent=NT>NOBS?'30 jours observés, puis prévision en pointillés':'écart quotidien, 30 jours';
+  document.getElementById('sdmid').textContent=NT>NOBS?L('30 jours observés, puis prévision en pointillés','30 days observed, then forecast (dashed)'):L('écart quotidien, 30 jours','daily anomaly, 30 days');
   drawSpark(series);
   if(scroll)document.getElementById('local').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
 }
@@ -513,10 +532,10 @@ map.addEventListener('click',e=>{
 });
 document.getElementById('geo').addEventListener('click',()=>{
   const btn=document.getElementById('geo');
-  if(!navigator.geolocation){btn.textContent='Position indisponible ici, touchez la carte';return;}
-  btn.disabled=true;btn.textContent='Localisation…';
-  navigator.geolocation.getCurrentPosition(pos=>{btn.disabled=false;btn.textContent='Utiliser ma position';showLocal(pos.coords.latitude,pos.coords.longitude);},
-    ()=>{btn.disabled=false;btn.textContent='Position refusée, touchez la carte';},{timeout:8000});
+  if(!navigator.geolocation){btn.textContent=L('Position indisponible ici, touchez la carte','Location unavailable here, tap the map');return;}
+  btn.disabled=true;btn.textContent=L('Localisation…','Locating…');
+  navigator.geolocation.getCurrentPosition(pos=>{btn.disabled=false;btn.textContent=L('Utiliser ma position','Use my location');showLocal(pos.coords.latitude,pos.coords.longitude);},
+    ()=>{btn.disabled=false;btn.textContent=L('Position refusée, touchez la carte','Location denied, tap the map');},{timeout:8000});
 });
 
 window.addEventListener('resize',()=>{drawMap(); if(marker)showLocal(marker.lat,marker.lon,false);});
@@ -529,26 +548,29 @@ document.querySelectorAll('nav.tabs button').forEach(bt=>bt.addEventListener('cl
 }));
 // ---------- ENSO ----------
 const N34=ENSO.hov.n34, HD=ENSO.hov.dates, WK=ENSO.wk, ONI=ENSO.oni;
-function ensoState(v){ if(v>=2)return['El Niño très fort','hot'];if(v>=1.5)return['El Niño fort','hot'];if(v>=1)return['El Niño modéré','hot'];if(v>=0.5)return['El Niño faible','hot'];
-  if(v<=-1.5)return['La Niña forte','cool'];if(v<=-1)return['La Niña modérée','cool'];if(v<=-0.5)return['La Niña faible','cool'];return['Neutre','ok'];}
+function ensoState(v){ if(v>=2)return[L('El Niño très fort','Very strong El Niño'),'hot'];if(v>=1.5)return[L('El Niño fort','Strong El Niño'),'hot'];if(v>=1)return[L('El Niño modéré','Moderate El Niño'),'hot'];if(v>=0.5)return[L('El Niño faible','Weak El Niño'),'hot'];
+  if(v<=-1.5)return[L('La Niña forte','Strong La Niña'),'cool'];if(v<=-1)return[L('La Niña modérée','Moderate La Niña'),'cool'];if(v<=-0.5)return[L('La Niña faible','Weak La Niña'),'cool'];return[L('Neutre','Neutral'),'ok'];}
 function setupEnso(){
   const last=N34[N34.length-1], w=WK[WK.length-1], [st]=ensoState(last);
   const el=document.getElementById('enum'); el.textContent=fmt(last,1)+' °C'; el.classList.toggle('neg',last<0);
-  document.getElementById('ehead').firstChild.textContent='Le thermomètre d\'El Niño est à ';
-  const wkd=w[0].slice(0,2)+' '+{JAN:'janv.',FEB:'févr.',MAR:'mars',APR:'avr.',MAY:'mai',JUN:'juin',JUL:'juil.',AUG:'août',SEP:'sept.',OCT:'oct.',NOV:'nov.',DEC:'déc.'}[w[0].slice(2,5)];
-  document.getElementById('esub').textContent=`${st}. L'eau du centre du Pacifique est ${fmt(Math.abs(last),1)} °C ${last>=0?'plus chaude':'plus froide'} que la normale (mesure satellite du ${fdate(HD[HD.length-1])} ; moyenne de la semaine du ${wkd} selon la NOAA : ${fmt(w[3],1)} °C). Dès +0,5 °C on parle d'El Niño ; au-delà de +2 °C, d'un épisode majeur comme en 1997-98 ou 2015-16.`;
+  document.getElementById('ehead').firstChild.textContent=L('Le thermomètre d\'El Niño est à ','The El Niño thermometer is at ');
+  const wkd=w[0].slice(0,2)+' '+(LANG==='en'?{JAN:'Jan',FEB:'Feb',MAR:'Mar',APR:'Apr',MAY:'May',JUN:'Jun',JUL:'Jul',AUG:'Aug',SEP:'Sep',OCT:'Oct',NOV:'Nov',DEC:'Dec'}:{JAN:'janv.',FEB:'févr.',MAR:'mars',APR:'avr.',MAY:'mai',JUN:'juin',JUL:'juil.',AUG:'août',SEP:'sept.',OCT:'oct.',NOV:'nov.',DEC:'déc.'})[w[0].slice(2,5)];
+  document.getElementById('esub').textContent=L(
+    `${st}. L'eau du centre du Pacifique est ${fmt(Math.abs(last),1)} °C ${last>=0?'plus chaude':'plus froide'} que la normale (mesure satellite du ${fdate(HD[HD.length-1])} ; moyenne de la semaine du ${wkd} selon la NOAA : ${fmt(w[3],1)} °C). Dès +0,5 °C on parle d'El Niño ; au-delà de +2 °C, d'un épisode majeur comme en 1997-98 ou 2015-16.`,
+    `${st}. Water in the central Pacific is ${fmt(Math.abs(last),1)}°C ${last>=0?'warmer':'colder'} than normal (satellite measurement for ${fdate(HD[HD.length-1])}; NOAA's weekly average for the week of ${wkd}: ${fmt(w[3],1)}°C). From +0.5°C it is called El Niño; beyond +2°C, a major episode such as 1997-98 or 2015-16.`
+  );
   document.getElementById('e12').textContent=fmt(w[1],1)+' °C'; document.getElementById('e3').textContent=fmt(w[2],1)+' °C'; document.getElementById('e4').textContent=fmt(w[4],1)+' °C';
-  const o=ONI[ONI.length-1]; document.getElementById('eoni').textContent=fmt(o[2],1)+' °C'; const SEAS={DJF:'déc.-févr.',JFM:'janv.-mars',FMA:'févr.-avr.',MAM:'mars-mai',AMJ:'avr.-juin',MJJ:'mai-juil.',JJA:'juin-août',JAS:'juil.-sept.',ASO:'août-oct.',SON:'sept.-nov.',OND:'oct.-déc.',NDJ:'nov.-janv.'};
-  document.getElementById('eonilab').textContent='Moyenne officielle, '+(SEAS[o[0]]||o[0])+' '+o[1];
+  const o=ONI[ONI.length-1]; document.getElementById('eoni').textContent=fmt(o[2],1)+' °C'; const SEAS=LANG==='en'?{DJF:'Dec-Feb',JFM:'Jan-Mar',FMA:'Feb-Apr',MAM:'Mar-May',AMJ:'Apr-Jun',MJJ:'May-Jul',JJA:'Jun-Aug',JAS:'Jul-Sep',ASO:'Aug-Oct',SON:'Sep-Nov',OND:'Oct-Dec',NDJ:'Nov-Jan'}:{DJF:'déc.-févr.',JFM:'janv.-mars',FMA:'févr.-avr.',MAM:'mars-mai',AMJ:'avr.-juin',MJJ:'mai-juil.',JJA:'juin-août',JAS:'juil.-sept.',ASO:'août-oct.',SON:'sept.-nov.',OND:'oct.-déc.',NDJ:'nov.-janv.'};
+  document.getElementById('eonilab').textContent=L('Moyenne officielle, ','Official average, ')+(SEAS[o[0]]||o[0])+' '+o[1];
 }
 function cvs(id,h){const c=document.getElementById(id),dpr=Math.min(window.devicePixelRatio||1,2),W=c.clientWidth||300;c.width=W*dpr;c.height=h*dpr;c.style.height=h+'px';const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,h);return[g,W,h];}
 function drawN34(){
-  const [g,W,H]=cvs('e34',200), L=36,Rr=8,T=10,Bt=26, n=N34.length;
-  const t0=Date.parse(HD[0]), t1=Date.parse(HD[n-1]); const mn=Math.min(-1,...N34)-0.3, mx=Math.max(1,...N34)+0.3, y=v=>T+(mx-v)/(mx-mn)*(H-T-Bt), x=i=>L+(Date.parse(HD[i])-t0)/(t1-t0)*(W-L-Rr);
+  const [g,W,H]=cvs('e34',200), LM=36,Rr=8,T=10,Bt=26, n=N34.length;
+  const t0=Date.parse(HD[0]), t1=Date.parse(HD[n-1]); const mn=Math.min(-1,...N34)-0.3, mx=Math.max(1,...N34)+0.3, y=v=>T+(mx-v)/(mx-mn)*(H-T-Bt), x=i=>LM+(Date.parse(HD[i])-t0)/(t1-t0)*(W-LM-Rr);
   g.font='600 11px "IBM Plex Mono",monospace'; g.textBaseline='middle';
-  for(const v of [-2,-1,0,1,2,3]){ if(v<mn||v>mx)continue; g.strokeStyle=v===0?'rgba(255,255,255,.45)':'rgba(147,166,182,.18)'; g.beginPath();g.moveTo(L,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#93A6B6'; g.textAlign='right'; g.fillText((v>0?'+':'')+v,L-6,y(v)); }
-  g.setLineDash([4,4]); g.strokeStyle='rgba(255,106,61,.6)'; g.beginPath();g.moveTo(L,y(0.5));g.lineTo(W-Rr,y(0.5));g.stroke(); g.strokeStyle='rgba(111,179,255,.6)'; g.beginPath();g.moveTo(L,y(-0.5));g.lineTo(W-Rr,y(-0.5));g.stroke(); g.setLineDash([]);
-  g.fillStyle='#ff6a3d'; g.textAlign='left'; g.fillText('seuil El Niño',L+4,y(0.5)-8); g.fillStyle='#6fb3ff'; g.fillText('seuil La Niña',L+4,y(-0.5)+9);
+  for(const v of [-2,-1,0,1,2,3]){ if(v<mn||v>mx)continue; g.strokeStyle=v===0?'rgba(255,255,255,.45)':'rgba(147,166,182,.18)'; g.beginPath();g.moveTo(LM,y(v));g.lineTo(W-Rr,y(v));g.stroke(); g.fillStyle='#93A6B6'; g.textAlign='right'; g.fillText((v>0?'+':'')+v,LM-6,y(v)); }
+  g.setLineDash([4,4]); g.strokeStyle='rgba(255,106,61,.6)'; g.beginPath();g.moveTo(LM,y(0.5));g.lineTo(W-Rr,y(0.5));g.stroke(); g.strokeStyle='rgba(111,179,255,.6)'; g.beginPath();g.moveTo(LM,y(-0.5));g.lineTo(W-Rr,y(-0.5));g.stroke(); g.setLineDash([]);
+  g.fillStyle='#ff6a3d'; g.textAlign='left'; g.fillText(L('seuil El Niño','El Niño threshold'),LM+4,y(0.5)-8); g.fillStyle='#6fb3ff'; g.fillText(L('seuil La Niña','La Niña threshold'),LM+4,y(-0.5)+9);
   for(const [top,col] of [[true,'rgba(255,106,61,.22)'],[false,'rgba(111,179,255,.22)']]){ g.save(); g.beginPath(); g.rect(0,top?0:y(0),W,top?y(0):H); g.clip();
     g.beginPath(); g.moveTo(x(0),y(0)); N34.forEach((v,i)=>g.lineTo(x(i),y(v))); g.lineTo(x(n-1),y(0)); g.closePath(); g.fillStyle=col; g.fill(); g.restore(); }
   g.beginPath(); N34.forEach((v,i)=>i?g.lineTo(x(i),y(v)):g.moveTo(x(i),y(v))); g.strokeStyle='#ff6a3d'; g.lineWidth=2; g.stroke();
@@ -556,25 +578,26 @@ function drawN34(){
   g.fillStyle='#fff'; g.textAlign='right'; g.fillText(fmt(N34[n-1],1)+' °C', x(n-1)-8, y(N34[n-1])-12);
   // months
   g.fillStyle='#93A6B6'; g.textAlign='center'; let lastM='';
-  HD.forEach((d,i)=>{const m=d.slice(0,7); if(m!==lastM&&d.slice(8,10)<='05'&&(+d.slice(5,7))%2===1){lastM=m; const lab=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'][+d.slice(5,7)-1]; g.fillText(lab,x(i),H-10); g.strokeStyle='rgba(147,166,182,.15)';g.beginPath();g.moveTo(x(i),T);g.lineTo(x(i),H-Bt);g.stroke();}});
+  const M3=LANG==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+  HD.forEach((d,i)=>{const m=d.slice(0,7); if(m!==lastM&&d.slice(8,10)<='05'&&(+d.slice(5,7))%2===1){lastM=m; const lab=M3[+d.slice(5,7)-1]; g.fillText(lab,x(i),H-10); g.strokeStyle='rgba(147,166,182,.15)';g.beginPath();g.moveTo(x(i),T);g.lineTo(x(i),H-Bt);g.stroke();}});
 }
 function drawHov(){
   const rows=ENSO.hov.rows, lons=ENSO.hov.lons, nt=rows.length, nl=lons.length;
-  const [g,W,H]=cvs('ehov',380), L=76,Rr=8,T=8,Bt=26, pw=W-L-Rr, ph=H-T-Bt;
+  const [g,W,H]=cvs('ehov',380), LM=76,Rr=8,T=8,Bt=26, pw=W-LM-Rr, ph=H-T-Bt;
   const img=g.createImageData(nl,nt); const d=img.data;
   for(let t=0;t<nt;t++)for(let j=0;j<nl;j++){const v=rows[t][j],o=(t*nl+j)*4; if(v==null){d[o]=34;d[o+1]=44;d[o+2]=56;d[o+3]=255;continue;} const c=color(v*1.2); d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;}
   const off2=document.createElement('canvas'); off2.width=nl; off2.height=nt; off2.getContext('2d').putImageData(img,0,0);
   const ht0=Date.parse(HD[0]), ht1=Date.parse(HD[nt-1]), yt=ms=>T+(ms-ht0)/(ht1-ht0)*ph;
   g.imageSmoothingEnabled=true;
-  for(let t=0;t<nt;t++){ const tm=Date.parse(HD[t]); const ya=t?yt((tm+Date.parse(HD[t-1]))/2):T, yb=t<nt-1?yt((tm+Date.parse(HD[t+1]))/2):T+ph; g.drawImage(off2,0,t,nl,1,L,ya,pw,Math.max(1,yb-ya+0.6)); }
-  const xl=lo=>L+(lo-lons[0])/(lons[nl-1]-lons[0])*pw;
+  for(let t=0;t<nt;t++){ const tm=Date.parse(HD[t]); const ya=t?yt((tm+Date.parse(HD[t-1]))/2):T, yb=t<nt-1?yt((tm+Date.parse(HD[t+1]))/2):T+ph; g.drawImage(off2,0,t,nl,1,LM,ya,pw,Math.max(1,yb-ya+0.6)); }
+  const xl=lo=>LM+(lo-lons[0])/(lons[nl-1]-lons[0])*pw;
   g.font='600 11px "IBM Plex Mono",monospace'; g.fillStyle='#93A6B6'; g.textAlign='center'; g.textBaseline='middle';
-  g.textAlign='left'; g.fillText('← Indonésie',L,H-10); g.textAlign='center'; g.fillText('milieu du Pacifique',xl(200),H-10); g.textAlign='right'; g.fillText('Pérou →',W-Rr,H-10);
+  g.textAlign='left'; g.fillText(L('← Indonésie','← Indonesia'),LM,H-10); g.textAlign='center'; g.fillText(L('milieu du Pacifique','mid-Pacific'),xl(200),H-10); g.textAlign='right'; g.fillText(L('Pérou →','Peru →'),W-Rr,H-10);
   g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=1.5; g.strokeRect(xl(190),T,xl(240)-xl(190),ph);
   g.textAlign='right'; let lastM='';
-  HD.forEach((dd,t)=>{const m=dd.slice(0,7); if(m!==lastM&&(+dd.slice(5,7))%3===1&&dd.slice(8,10)<='05'){lastM=m; const yy=yt(Date.parse(dd)); g.fillText(MONTHS[+dd.slice(5,7)-1].slice(0,3)+' '+dd.slice(2,4), L-6, yy);}});
-  g.fillStyle='#fff'; g.textAlign='right'; g.fillText('aujourd\'hui', L-6, T+ph-4);
-  const tl='thermomètre (Niño 3.4)', tw=g.measureText(tl).width; g.fillStyle='rgba(12,26,39,.85)'; g.fillRect(xl(190)+1,T+1,tw+10,20);
+  HD.forEach((dd,t)=>{const m=dd.slice(0,7); if(m!==lastM&&(+dd.slice(5,7))%3===1&&dd.slice(8,10)<='05'){lastM=m; const yy=yt(Date.parse(dd)); g.fillText(MONTHS[+dd.slice(5,7)-1].slice(0,3)+' '+dd.slice(2,4), LM-6, yy);}});
+  g.fillStyle='#fff'; g.textAlign='right'; g.fillText(L('aujourd\'hui','today'), LM-6, T+ph-4);
+  const tl=L('thermomètre (Niño 3.4)','thermometer (Niño 3.4)'), tw=g.measureText(tl).width; g.fillStyle='rgba(12,26,39,.85)'; g.fillRect(xl(190)+1,T+1,tw+10,20);
   g.fillStyle='#fff'; g.textAlign='left'; g.fillText(tl, xl(190)+6, T+11);
 }
 function drawOni(){
@@ -588,7 +611,7 @@ function drawOni(){
   g.fillStyle='#fff'; g.font='600 10px "IBM Plex Mono",monospace';
   for(const [yr,lab] of [[1982,'82-83'],[1997,'97-98'],[2015,'15-16'],[2023,'23-24']]){ const i=ONI.findIndex(r=>r[1]===yr+1&&r[0]==='DJF'); if(i>0){const v=ONI[i][2]; g.fillText(lab,x(i),y(v)-9);} }
 }
-const IMPACTS={
+const IMPACTS_FR={
   hot:{t:'Impacts possibles d\'El Niño',l:[
     ['Plus sec','Indonésie, est de l\'Australie, Philippines, sud de l\'Afrique, nord du Brésil ; mousson indienne souvent plus faible.'],
     ['Plus humide','côtes du Pérou et de l\'Équateur, sud du Brésil et Argentine, Afrique de l\'Est (octobre-décembre), sud des États-Unis en hiver.'],
@@ -604,23 +627,40 @@ const IMPACTS={
     ['France et Europe','effet faible, difficile à distinguer du reste de la météo.']]},
   ok:{t:'Impacts possibles',l:[
     ['Pacifique neutre','pas d\'influence marquée sur la météo mondiale : d\'autres moteurs dominent. On surveille la tendance du thermomètre.']]}};
+const IMPACTS_EN={
+  hot:{t:'Possible impacts of El Niño',l:[
+    ['Drier','Indonesia, eastern Australia, the Philippines, southern Africa, northern Brazil; the Indian monsoon is often weaker.'],
+    ['Wetter','the coasts of Peru and Ecuador, southern Brazil and Argentina, East Africa (October-December), the southern United States in winter.'],
+    ['Cyclones','fewer hurricanes in the Atlantic, more in the central and eastern Pacific.'],
+    ['Ocean','coral bleaching, sharp drops in the Peruvian anchovy catch.'],
+    ['Global','the year after a strong El Niño often sets global heat records (2016, 2024).'],
+    ['France and Europe','a weak effect, hard to distinguish from ordinary weather variability.']]},
+  cool:{t:'Possible impacts of La Niña',l:[
+    ['Wetter','Indonesia, Australia (flood risk), northern South America.'],
+    ['Drier','East Africa, the southern United States, Argentina and southern Brazil, the Peruvian coast.'],
+    ['Cyclones','the Atlantic hurricane season is often more active.'],
+    ['Global','a slightly cooler year, without interrupting the underlying warming trend.'],
+    ['France and Europe','a weak effect, hard to distinguish from ordinary weather variability.']]},
+  ok:{t:'Possible impacts',l:[
+    ['Neutral Pacific','no strong influence on global weather: other drivers dominate. We keep watching the thermometer trend.']]}};
+const IMPACTS=LANG==='en'?IMPACTS_EN:IMPACTS_FR;
 function setupImpacts(){
   const [st,k]=ensoState(N34[N34.length-1]), I=IMPACTS[k];
-  document.getElementById('eimpact').innerHTML=`<h2>${I.t}</h2><p>État actuel : <b>${st}</b>.</p><ul>${I.l.map(([a,b])=>`<li><b>${a}</b> : ${b}</li>`).join('')}</ul>`+
-    `<p class="fine">Tendances observées lors des épisodes passés (NOAA, OMM), pas une prévision : chaque épisode est différent. Les effets culminent en général entre décembre et mars.</p>`;
+  document.getElementById('eimpact').innerHTML=`<h2>${I.t}</h2><p>${L('État actuel','Current state')} : <b>${st}</b>.</p><ul>${I.l.map(([a,b])=>`<li><b>${a}</b> : ${b}</li>`).join('')}</ul>`+
+    `<p class="fine">${L('Tendances observées lors des épisodes passés (NOAA, OMM), pas une prévision : chaque épisode est différent. Les effets culminent en général entre décembre et mars.','Observed tendencies from past episodes (NOAA, WMO), not a forecast: every episode differs. Effects usually peak between December and March.')}</p>`;
 }
 function drawEnso(){setupEnso();setupProbs();setupImpacts();drawN34();drawHov();drawOni();}
 
-const pctS=x=>(x>=0?'+':'−')+Math.abs(Math.round(x*100))+' %', mkm=x=>x.toFixed(2).replace('.',',')+' M km²';
-const SEAS={DJF:'déc.-févr.',JFM:'janv.-mars',FMA:'févr.-avr.',MAM:'mars-mai',AMJ:'avr.-juin',MJJ:'mai-juil.',JJA:'juin-août',JAS:'juil.-sept.',ASO:'août-oct.',SON:'sept.-nov.',OND:'oct.-déc.',NDJ:'nov.-janv.'};
+const pctS=x=>(x>=0?'+':'−')+Math.abs(Math.round(x*100))+L(' %','%'), mkm=x=>x.toFixed(2).replace('.',L(',','.'))+' M km²';
+const SEAS=LANG==='en'?{DJF:'Dec-Feb',JFM:'Jan-Mar',FMA:'Feb-Apr',MAM:'Mar-May',AMJ:'Apr-Jun',MJJ:'May-Jul',JJA:'Jun-Aug',JAS:'Jul-Sep',ASO:'Aug-Oct',SON:'Sep-Nov',OND:'Oct-Dec',NDJ:'Nov-Jan'}:{DJF:'déc.-févr.',JFM:'janv.-mars',FMA:'févr.-avr.',MAM:'mars-mai',AMJ:'avr.-juin',MJJ:'mai-juil.',JJA:'juin-août',JAS:'juil.-sept.',ASO:'août-oct.',SON:'sept.-nov.',OND:'oct.-déc.',NDJ:'nov.-janv.'};
 
 // ---------- prévision ENSO officielle ----------
 function setupProbs(){
   const P=ENSO.probs, box=document.getElementById('eprob'); if(!P||!P.length)return; box.hidden=false;
   const seg=(w,c)=>w?`<div style="width:${w}%;background:${c}"></div>`:'';
-  box.innerHTML=`<h2>Et dans les prochains mois ?</h2><p>Probabilités officielles de la NOAA pour chaque saison de trois mois : <span class="swatch" style="background:#6fb3ff"></span>La Niña <span class="swatch" style="background:#93A6B6"></span>neutre <span class="swatch" style="background:#ff6a3d"></span>El Niño.</p>`+
-    P.map(([se,ln,ne,en])=>`<div class="prow"><span>${SEAS[se]||se}</span><div class="pbar" role="img" aria-label="${SEAS[se]||se} : El Niño ${en} %, neutre ${ne} %, La Niña ${ln} %">${seg(ln,'#6fb3ff')}${seg(ne,'#93A6B6')}${seg(en,'#ff6a3d')}</div><span>${en} %</span></div>`).join('')+
-    `<p class="fine">Pourcentage à droite : probabilité d'El Niño. Source NOAA CPC, mise à jour vers le 10 de chaque mois, calculée sur l'indice relatif « RONI ».</p>`;
+  box.innerHTML=`<h2>${L('Et dans les prochains mois ?','What about the coming months?')}</h2><p>${L('Probabilités officielles de la NOAA pour chaque saison de trois mois','Official NOAA probabilities for each three-month season')} : <span class="swatch" style="background:#6fb3ff"></span>${L('La Niña','La Niña')} <span class="swatch" style="background:#93A6B6"></span>${L('neutre','neutral')} <span class="swatch" style="background:#ff6a3d"></span>El Niño.</p>`+
+    P.map(([se,ln,ne,en])=>`<div class="prow"><span>${SEAS[se]||se}</span><div class="pbar" role="img" aria-label="${SEAS[se]||se} : El Niño ${en} %, ${L('neutre','neutral')} ${ne} %, La Niña ${ln} %">${seg(ln,'#6fb3ff')}${seg(ne,'#93A6B6')}${seg(en,'#ff6a3d')}</div><span>${en} %</span></div>`).join('')+
+    `<p class="fine">${L('Pourcentage à droite : probabilité d\'El Niño. Source NOAA CPC, mise à jour vers le 10 de chaque mois, calculée sur l\'indice relatif « RONI ».','Percentage on the right: probability of El Niño. Source: NOAA CPC, updated around the 10th of each month, based on the relative ONI index (“RONI”).')}</p>`;
 }
 
 // ---------- surveillance : glace de mer (globes polaires) et coraux ----------
@@ -650,8 +690,9 @@ function drawIce(id,pole){
   for(const line of COAST){ let pen=false; for(const [lo,la] of line){ if(north?la<39:la>-49){pen=false;continue;}
     const m=fwd(la,lo,p0,l0), x=R+m.x*k, y=R-m.y*k; pen?g.lineTo(x,y):g.moveTo(x,y); pen=true; } }
   g.stroke();
-  g.fillStyle='#fff'; g.font=`700 ${13*dpr}px "IBM Plex Mono",monospace`; g.textAlign='center'; g.fillText(north?'Arctique':'Antarctique',R,18*dpr);
+  g.fillStyle='#fff'; g.font=`700 ${13*dpr}px "IBM Plex Mono",monospace`; g.textAlign='center'; g.fillText(L(north?'Arctique':'Antarctique',north?'Arctic':'Antarctic'),R,18*dpr);
 }
+const ordEn=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
 function setupSurv(){
   if(typeof SURV==='undefined')return; const box=document.getElementById('surv');
   if(SURV.ice&&SURV.ice_maps){
@@ -661,7 +702,10 @@ function setupSurv(){
       b.onclick=()=>{refYear=y;[...yb.children].forEach(c=>c.setAttribute('aria-pressed',c.textContent===y));drawSurv();};yb.appendChild(b);});
   }
   if(SURV.coral){ box.hidden=false; const C=SURV.coral;
-    document.getElementById('coralBox').innerHTML=`<h3>Coraux</h3><p><b>${Math.round(C.alert1*100)} %</b> de l'océan tropical (35°S-35°N) est en alerte blanchissement : la chaleur accumulée ces trois derniers mois rend le blanchissement des coraux probable. Dont <b>${Math.round(C.alert2*100)} %</b> en alerte maximale, où des coraux risquent de mourir.</p><p class="fine">NOAA Coral Reef Watch, niveaux Alerte 1 et 2, maximum sur 7 jours au ${fdate(C.date)}. Mesuré sur tout l'océan tropical, pas seulement sur les récifs.</p>`; }
+    document.getElementById('coralBox').innerHTML=L(
+      `<h3>Coraux</h3><p><b>${Math.round(C.alert1*100)} %</b> de l'océan tropical (35°S-35°N) est en alerte blanchissement : la chaleur accumulée ces trois derniers mois rend le blanchissement des coraux probable. Dont <b>${Math.round(C.alert2*100)} %</b> en alerte maximale, où des coraux risquent de mourir.</p><p class="fine">NOAA Coral Reef Watch, niveaux Alerte 1 et 2, maximum sur 7 jours au ${fdate(C.date)}. Mesuré sur tout l'océan tropical, pas seulement sur les récifs.</p>`,
+      `<h3>Corals</h3><p><b>${Math.round(C.alert1*100)}%</b> of the tropical ocean (35°S-35°N) is under a bleaching alert: heat accumulated over the past three months makes coral bleaching likely. Of which <b>${Math.round(C.alert2*100)}%</b> is at the highest alert level, where corals risk dying.</p><p class="fine">NOAA Coral Reef Watch, Alert Levels 1 and 2, 7-day maximum as of ${fdate(C.date)}. Measured across the whole tropical ocean, not just reefs.</p>`
+    ); }
   drawSurv();
 }
 function drawSurv(){
@@ -669,9 +713,14 @@ function drawSurv(){
   document.querySelectorAll('.refy').forEach(e=>e.textContent=fdate(SURV.ice.north.date).replace(/ \d{4}$/,' '+refYear));
   for(const [id,pole,name] of [['iceN','north','Arctique'],['iceS','south','Antarctique']]){
     const I=SURV.ice[pole], r=I.same_date[refYear]; drawIce(id,pole);
-    document.getElementById(id+'txt').innerHTML=`<b>${mkm(I.extent)}</b> au ${fdate(I.date).replace(/ \d{4}$/,'')}, soit ${pctS(I.extent/I.normal-1)} par rapport à la normale. `+
+    document.getElementById(id+'txt').innerHTML=L(
+      `<b>${mkm(I.extent)}</b> au ${fdate(I.date).replace(/ \d{4}$/,'')}, soit ${pctS(I.extent/I.normal-1)} par rapport à la normale. `+
       (r?`C'est <b>${Math.abs(Math.round((I.extent/r-1)*100))} % de ${I.extent<r?'moins':'plus'}</b> que le même jour en ${refYear} (${mkm(r)}). `:'')+
-      `${I.rank_low===1?'Plus faible':I.rank_low+'<sup>e</sup> plus faible'} étendue sur ${I.nyears} ans pour cette date.`;
+      `${I.rank_low===1?'Plus faible':I.rank_low+'<sup>e</sup> plus faible'} étendue sur ${I.nyears} ans pour cette date.`,
+      `<b>${mkm(I.extent)}</b> on ${fdate(I.date).replace(/ \d{4}$/,'')}, ${pctS(I.extent/I.normal-1)} versus normal. `+
+      (r?`That is <b>${Math.abs(Math.round((I.extent/r-1)*100))}% ${I.extent<r?'less':'more'}</b> than the same day in ${refYear} (${mkm(r)}). `:'')+
+      `${I.rank_low===1?'Lowest':ordEn(I.rank_low)+' lowest'} extent in ${I.nyears} years for this date.`
+    );
   }
 }
 
@@ -683,13 +732,14 @@ function oceanStats(t,b){ // moyenne pondérée cos(lat) et parts > +1/+2 °C, s
 }
 function setupBulletin(){
   const t=TODAY, g=META.g60, d30=g[t]-g[0], d7=g[t]-g[Math.max(0,t-7)];
-  const L=META.lmean.slice(0,NOBS).map((x,i)=>[x,i]).filter(([x])=>x!=null), lnow=L.length?L[L.length-1][0]:null, ld=L.length>1?lnow-L[0][0]:null;
+  const LS=META.lmean.slice(0,NOBS).map((x,i)=>[x,i]).filter(([x])=>x!=null), lnow=LS.length?LS[LS.length-1][0]:null, ld=LS.length>1?lnow-LS[0][0]:null;
   const lfc=META.lmean.slice(NOBS).filter(x=>x!=null), S=typeof SURV!=='undefined'?SURV:{};
   const pct=x=>Math.round(x*100)+' %';
-  const trend=d=>Math.abs(d)<0.05?'stable sur un mois':(d>0?'en hausse':'en baisse')+' de '+fmt(Math.abs(d)).slice(1)+' °C en un mois';
-  const regs=REGIONS.filter(r=>r.b&&r.n!=='Monde').map(r=>[r.n,oceanStats(t,r.b).mean]).sort((a,b)=>b[1]-a[1]);
+  const trend=d=>Math.abs(d)<0.05?L('stable sur un mois','stable over the past month'):L((d>0?'en hausse':'en baisse')+' de '+fmt(Math.abs(d)).slice(1)+' °C en un mois',(d>0?'up ':'down ')+fmt(Math.abs(d)).slice(1)+'°C over the past month');
+  const regs=REGIONS.filter(r=>r.b&&r.n!=='Monde').map(r=>[L(r.n,r.en),oceanStats(t,r.b).mean]).sort((a,b)=>b[1]-a[1]);
   const [st]=ensoState(N34[N34.length-1]);
-  document.getElementById('bulletin').innerHTML=`<h2>Bulletin du ${fdate(META.dates[t])}</h2><ul>`+
+  document.getElementById('bulletin').innerHTML=L(
+    `<h2>Bulletin du ${fdate(META.dates[t])}</h2><ul>`+
     `<li><b>Océans</b> : ${fmt(g[t])} °C par rapport à la normale, ${trend(d30)} (${fmt(d7)} °C sur 7 jours).</li>`+
     `<li><b>Chaleur marine</b> : ${Math.round(META.frac_hot[t]*100)} % de la surface des océans est à plus de +1 °C, ${Math.round(oceanStats(t).hot2*100)} % à plus de +2 °C.</li>`+
     `<li><b>Par région</b> : ${regs.map(([n,m])=>n+' '+fmt(m,1)+' °C').join(', ')}.</li>`+
@@ -698,7 +748,18 @@ function setupBulletin(){
     (NT>NOBS?`<li><b>Prévision au ${fdate(META.dates[NT-1]).replace(/ \d{4}$/,'')}</b> : océans ${fmt(g[NT-1])} °C (${fmt(g[NT-1]-g[t])} °C d'ici là)${lfc.length?`, continents ${fmt(lfc[lfc.length-1],1)} °C`:''}.</li>`:'')+
     (S.ice?`<li><b>Glace de mer</b> : Arctique ${mkm(S.ice.north.extent)} (${pctS(S.ice.north.extent/S.ice.north.normal-1)} par rapport à la normale), Antarctique ${mkm(S.ice.south.extent)} (${pctS(S.ice.south.extent/S.ice.south.normal-1)}).</li>`:'')+
     (S.coral?`<li><b>Coraux</b> : ${pct(S.coral.alert1)} de l'océan tropical en alerte blanchissement.</li>`:'')+`</ul>`+
-    `<p class="fine">Écarts à la moyenne 1991-2020 pour la même date. Les derniers jours sont préliminaires et peuvent bouger de quelques centièmes.</p>`;
+    `<p class="fine">Écarts à la moyenne 1991-2020 pour la même date. Les derniers jours sont préliminaires et peuvent bouger de quelques centièmes.</p>`,
+    `<h2>Bulletin for ${fdate(META.dates[t])}</h2><ul>`+
+    `<li><b>Oceans</b>: ${fmt(g[t])}°C versus normal, ${trend(d30)} (${fmt(d7)}°C over 7 days).</li>`+
+    `<li><b>Marine heat</b>: ${Math.round(META.frac_hot[t]*100)}% of the ocean surface is above +1°C, ${Math.round(oceanStats(t).hot2*100)}% above +2°C.</li>`+
+    `<li><b>By region</b>: ${regs.map(([n,m])=>n+' '+fmt(m,1)+'°C').join(', ')}.</li>`+
+    (lnow==null?'':`<li><b>Land</b>: ${fmt(lnow,1)}°C versus normal, ${trend(ld)}.</li>`)+
+    `<li><b>Equatorial Pacific</b>: ${st}, the El Niño thermometer is at ${fmt(N34[N34.length-1],1)}°C (details in the "El Niño live" tab).</li>`+
+    (NT>NOBS?`<li><b>Forecast for ${fdate(META.dates[NT-1]).replace(/ \d{4}$/,'')}</b>: oceans ${fmt(g[NT-1])}°C (${fmt(g[NT-1]-g[t])}°C by then)${lfc.length?`, land ${fmt(lfc[lfc.length-1],1)}°C`:''}.</li>`:'')+
+    (S.ice?`<li><b>Sea ice</b>: Arctic ${mkm(S.ice.north.extent)} (${pctS(S.ice.north.extent/S.ice.north.normal-1)} versus normal), Antarctic ${mkm(S.ice.south.extent)} (${pctS(S.ice.south.extent/S.ice.south.normal-1)}).</li>`:'')+
+    (S.coral?`<li><b>Corals</b>: ${pct(S.coral.alert1)} of the tropical ocean under bleaching alert.</li>`:'')+`</ul>`+
+    `<p class="fine">Departures from the 1991-2020 average for the same date. The most recent days are preliminary and may shift by a few hundredths.</p>`
+  );
 }
 window.addEventListener('resize',()=>{ if(!document.getElementById('tab-enso').hidden)drawEnso(); else drawSurv(); });
 

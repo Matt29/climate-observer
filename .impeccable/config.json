@@ -1,0 +1,32 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "space grotesk",
+        "createdAt": "2026-09-17T08:15:09.529Z",
+        "reason": "ODC design system: Space Grotesk is the mandated display face (DESIGN_SYSTEM/CLAUDE.md, three families only)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "web/template.html"
+        ],
+        "createdAt": "2026-09-17T08:15:17.029Z",
+        "reason": "ODC design system token --shadow-accent (0 8px 24px rgba(67,188,205,.28)) on the primary button, same as oceandataconsulting.fr"
+      },
+      {
+        "rule": "all-caps-body",
+        "value": "*",
+        "files": [
+          "web/template.html"
+        ],
+        "createdAt": "2026-09-17T08:15:17.053Z",
+        "reason": "ODC design system eyebrow style: IBM Plex Mono uppercase single-line kickers, as on oceandataconsulting.fr"
+      }
+    ]
+  }
+}

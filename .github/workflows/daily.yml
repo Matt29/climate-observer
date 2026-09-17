@@ -7,6 +7,7 @@ concurrency: daily-build
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45   # un run normal prend ~5 min ; évite qu'une source bloquée consomme 6 h
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
