@@ -316,13 +316,15 @@ def main():
 
     ltm_path = get(OISST_LTM, os.path.join(args.cache, "oisst", "sst.day.mean.ltm.1991-2020.nc"))
     dates, ocean1 = build_ocean(recent_paths, ltm_path)
-    anom05, clim05 = build_land(start, end, os.path.join(args.cache, "cpc"), args.fc_days)
-    land1 = anom05.coarsen(lat=2, lon=2, boundary="exact").mean()
+    # terre optionnelle : PSL tombe en maintenance plusieurs jours (503 le 2026-09-19) ; la mer et l'ENSO ne doivent pas s'arrêter avec elle
+    land = soft("terre CPC", lambda: build_land(start, end, os.path.join(args.cache, "cpc"), args.fc_days))
+    anom05, clim05 = land if land else (None, None)
+    land1 = xr.full_like(ocean1, np.nan) if anom05 is None else anom05.coarsen(lat=2, lon=2, boundary="exact").mean()
     enso = build_enso(enso_paths, ltm_path)
 
     # prévision : la mer fixe le nombre de jours, limité aux jours où la terre existe aussi (NaN si la terre échoue)
     ofc = soft("prévision mer GLO12", lambda: ocean_forecast(ocean1, end, ltm_path, os.path.join(args.cache, "glo12"), args.fc_days))
-    lfc = soft("prévision terre ECMWF", lambda: land_forecast(anom05, clim05, end, os.path.join(args.cache, "ecmwf"), args.fc_days))
+    lfc = None if anom05 is None else soft("prévision terre ECMWF", lambda: land_forecast(anom05, clim05, end, os.path.join(args.cache, "ecmwf"), args.fc_days))
     nobs, nfc = len(dates), 0 if ofc is None else len(ofc) if lfc is None else min(len(ofc), len(lfc))
     if nfc:
         def pad(fc):   # IFS open data s'arrête à 240 h : la terre a un jour de moins que la mer
