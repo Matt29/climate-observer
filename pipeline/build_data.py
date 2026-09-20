@@ -45,7 +45,12 @@ def get(url, path, stall=3):
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     part, fails, size = path + ".part", 0, -1
     while fails < stall:
-        rc = os.system(f'curl -s -f -C - -o "{part}" "{url}"') >> 8
+        # --retry couvre les transitoires (408/429/5xx) ; pas --retry-all-errors, qui
+        # réessaierait aussi les 404 (fichier de l'année pas encore publié).
+        # ponytail: n'absorbe que les micro-coupures ; une panne longue d'une source
+        # (NOAA PSL 503 le 2026-09-19) fait toujours échouer le build — le vrai correctif
+        # serait de retomber sur les données du run précédent pour la source morte.
+        rc = os.system(f'curl -s -f -C - --retry 5 --retry-delay 20 -o "{part}" "{url}"') >> 8
         if rc == 0 and os.path.getsize(part) > 0:
             os.replace(part, path)
             return path
