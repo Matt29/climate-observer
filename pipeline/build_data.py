@@ -47,9 +47,9 @@ def get(url, path, stall=3):
     while fails < stall:
         # --retry couvre les transitoires (408/429/5xx) ; pas --retry-all-errors, qui
         # réessaierait aussi les 404 (fichier de l'année pas encore publié).
-        # ponytail: n'absorbe que les micro-coupures ; une panne longue d'une source
-        # (NOAA PSL 503 le 2026-09-19) fait toujours échouer le build — le vrai correctif
-        # serait de retomber sur les données du run précédent pour la source morte.
+        # ponytail: n'absorbe que les micro-coupures ; une panne longue (NOAA PSL 503 depuis le
+        # 2026-09-19) fait échouer la source, plus le build entier si elle passe par soft().
+        # Si une panne dure plus d'une semaine : garder la dernière copie CPC via actions/cache.
         rc = os.system(f'curl -s -f -C - --retry 5 --retry-delay 20 -o "{part}" "{url}"') >> 8
         if rc == 0 and os.path.getsize(part) > 0:
             os.replace(part, path)
