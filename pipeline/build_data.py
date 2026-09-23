@@ -21,6 +21,7 @@ Notes importantes (voir README) :
 import argparse, base64, datetime as dt, functools, json, os, re, sys, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
+import pandas as pd
 import xarray as xr
 import cftime
 
@@ -47,9 +48,8 @@ def get(url, path, stall=3):
     while fails < stall:
         # --retry couvre les transitoires (408/429/5xx) ; pas --retry-all-errors, qui
         # réessaierait aussi les 404 (fichier de l'année pas encore publié).
-        # ponytail: n'absorbe que les micro-coupures ; une panne longue (NOAA PSL 503 depuis le
-        # 2026-09-19) fait échouer la source, plus le build entier si elle passe par soft().
-        # Si une panne dure plus d'une semaine : garder la dernière copie CPC via actions/cache.
+        # n'absorbe que les micro-coupures ; une panne longue fait échouer la source (la terre CPC
+        # retombe alors sur sa copie d'hier, voir build_land).
         rc = os.system(f'curl -s -f -C - --retry 5 --retry-delay 20 -o "{part}" "{url}"') >> 8
         if rc == 0 and os.path.getsize(part) > 0:
             os.replace(part, path)
@@ -168,14 +168,24 @@ def build_land(d0, d1, cache, days):
     def field(var):
         """Valeurs du jour et climatologie 1991-2020 alignée sur le jour de l'année.
         Fichiers complets : NCSS corrompt tmin et ne sait pas reprendre un transfert coupé (voir README)."""
-        path = os.path.join(cache, f"{var}.{year}.nc")
-        for _ in range(2):   # le fichier annuel grossit chaque jour : copie en cache trop courte -> on la reprend
-            with xr.open_dataset(get(PSL_FILES + f"{var}.{year}.nc", path)) as ds:
-                obs = ds[var].sel(time=slice(str(d0), str(d1))).load()
-            if obs.sizes["time"] == n:
-                break
-            os.remove(path)
-        assert obs.sizes["time"] == n, f"jours manquants dans {var}"
+        path, new = os.path.join(cache, f"{var}.{year}.nc"), os.path.join(cache, f"{var}.{year}.new.nc")
+
+        def load(p):
+            with xr.open_dataset(p) as ds:
+                return ds[var].sel(time=slice(str(d0), str(d1))).load()
+
+        obs = load(path) if os.path.exists(path) else None
+        if obs is None or obs.sizes["time"] < n:   # le fichier annuel grossit chaque jour : copie absente ou trop courte -> on la reprend
+            try:
+                obs = load(get(PSL_FILES + f"{var}.{year}.nc", new))
+                os.replace(new, path)
+            except Exception as e:   # PSL en panne : on garde la copie d'hier (restaurée par actions/cache en CI) plutôt que perdre la terre
+                if os.path.exists(new):
+                    os.remove(new)
+                if obs is None or obs.sizes["time"] == 0:
+                    raise
+                print(f"[dégradé] {var} : copie en cache jusqu'au {str(obs.time.values[-1])[:10]} ({e})", file=sys.stderr)
+        obs = obs.reindex(time=pd.date_range(d0, d1))   # jours absents -> NaN, affichés n/d
         ltm = xr.open_dataset(get(PSL_FILES + f"{var}.day.ltm.1991-2020.nc",
                                   os.path.join(cache, f"{var}.day.ltm.1991-2020.nc")), decode_times=False)
         days_ = cftime.num2date(ltm.time.values, ltm.time.attrs["units"], "gregorian")   # année 1 : cftime

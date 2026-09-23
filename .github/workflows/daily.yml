@@ -1,7 +1,12 @@
 name: daily-build
 on:
   schedule:
-    - cron: "30 6 * * *"   # 06:30 UTC, après la mise à jour OISST/CPC
+    # GitHub décale les crons de plusieurs heures (06:30 prévu -> 11-13 h UTC en sept. 2026) :
+    # plusieurs déclenchements, le premier qui passe met à jour ; les suivants rattrapent une source en panne
+    # et prennent le fichier CPC du jour (publié par PSL vers 15:40 UTC).
+    - cron: "30 6 * * *"
+    - cron: "30 10 * * *"
+    - cron: "30 17 * * *"
   workflow_dispatch:
 concurrency: daily-build
 jobs:
@@ -20,6 +25,11 @@ jobs:
             cache/cpc/tmax.day.ltm.1991-2020.nc
             cache/cpc/tmin.day.ltm.1991-2020.nc
           key: ltm-1991-2020-v1
+      - uses: actions/cache@v4   # fichiers CPC de l'année (~115 Mo) : copie de secours si PSL est en panne ; clé tournante, restaure la plus récente
+        with:
+          path: cache/cpc/tm??.20??.nc
+          key: cpc-year-${{ github.run_id }}
+          restore-keys: cpc-year-
       - run: python pipeline/build_data.py
         env:
           COPERNICUSMARINE_SERVICE_USERNAME: ${{ secrets.COPERNICUSMARINE_SERVICE_USERNAME }}
