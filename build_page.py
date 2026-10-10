@@ -38,7 +38,7 @@ PAIRS_EN = [
      'href="https://oceandataconsulting.fr/en" target="_blank" rel="noopener"><span class="brandbar-dot"></span>'),
     ('href="https://oceandataconsulting.fr" target="_blank" rel="noopener">OceanData Consulting</a>',
      'href="https://oceandataconsulting.fr/en" target="_blank" rel="noopener">OceanData Consulting</a>'),
-    ('href="https://oceandataconsulting.fr/#contact" target="_blank" rel="noopener">Contact</a>',
+    ('href="https://oceandataconsulting.fr/contact" target="_blank" rel="noopener">Contact</a>',
      'href="https://oceandataconsulting.fr/en/contact" target="_blank" rel="noopener">Contact</a>'),
     ('<!--LANGSWITCH-->', LANGSWITCH_EN),
     # static number placeholders (overwritten by JS on load, but a no-JS crawler sees these)
